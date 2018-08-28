@@ -31,6 +31,31 @@ class ElefantenStarkConsumerTest {
     }
 
     @Test
+    void whenTheWorkerFailsTheWorkCanBeReConsumed() throws Exception {
+        WorkItem[] work = new WorkItem[1];
+        ElefantenStarkConsumer elefantenStarkConsumer = new ElefantenStarkConsumer();
+
+        withPostgresAndSchema(connection -> {
+            scheduleWork(connection);
+            try {
+                elefantenStarkConsumer.next(workItem -> {
+                    throw new IllegalStateException();
+                }).accept(connection);
+            } catch (RuntimeException ex) {
+                // Ignore
+            }
+
+            elefantenStarkConsumer.next(workItem -> work[0] = workItem).accept(connection);
+        });
+
+        assertAll("work",
+            () -> assertEquals("a", work[0].key()),
+            () -> assertEquals("b", work[0].value()),
+            () -> assertEquals(23, work[0].version())
+        );
+    }
+
+    @Test
     void ifThereIsNoWorkNothingIsConsumed() throws Exception {
         AtomicBoolean foundWork = new AtomicBoolean(false);
         ElefantenStarkConsumer elefantenStarkConsumer = new ElefantenStarkConsumer();
