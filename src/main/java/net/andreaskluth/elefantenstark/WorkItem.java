@@ -44,4 +44,9 @@ public class WorkItem {
   public int hashCode() {
     return Objects.hash(key, value, version);
   }
+
+  @Override
+  public String toString() {
+    return "WorkItem{key='" + key + "'" + ", value='" + value + "'" + ", version=" + version + "}";
+  }
 }

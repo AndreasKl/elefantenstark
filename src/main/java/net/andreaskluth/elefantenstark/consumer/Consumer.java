@@ -1,12 +1,12 @@
 package net.andreaskluth.elefantenstark.consumer;
 
+import static java.util.Objects.requireNonNull;
+
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import net.andreaskluth.elefantenstark.WorkItem;
-
-import static java.util.Objects.requireNonNull;
 
 public class Consumer {
 
@@ -21,20 +21,51 @@ public class Consumer {
           + ")"
           + "RETURNING *;";
 
+  public static String OBTAIN_WORK_QUERY_ADVANCED =
+      "UPDATE"
+          + " queue"
+          + " SET available = FALSE"
+          + " WHERE id ="
+          + "    ("
+          + "        SELECT id FROM "
+          + "        ("
+          + "            SELECT"
+          + "                id, \"key\""
+          + "            FROM queue"
+          + "            WHERE available"
+          + "            ORDER BY id"
+          + "            LIMIT 16"
+          + "        ) ss"
+          + "        WHERE pg_try_advisory_xact_lock('queue'::regclass::int, ('x'||substr(md5(\"key\"),1,8))::bit(32)::int)"
+          + "        ORDER BY id"
+          + "        LIMIT 1"
+          + "    )"
+          + " AND available"
+          + " RETURNING *;";
+
   private final String query;
+
+  public Consumer(String obtainWorkQuery) {
+    requireNonNull(obtainWorkQuery, "obtainWorkQuery must not be null");
+    this.query = obtainWorkQuery;
+  }
 
   /**
    * Creates a {@link Consumer} using a <code>FOR UPDATE SKIP LOCKED</code> query to obtain work
    * form the work queue. If the {@link WorkItem} is processed the entry is deleted from the
    * database.
    */
-  public Consumer() {
-    this.query = OBTAIN_WORK_QUERY;
+  public static Consumer simple() {
+    return new Consumer(OBTAIN_WORK_QUERY);
   }
 
-  public Consumer(String obtainWorkQuery) {
-    requireNonNull(obtainWorkQuery, "obtainWorkQuery must not be null");
-    this.query = obtainWorkQuery;
+  /**
+   * Creates a {@link Consumer} using a <code>pg_try_advisory_xact_lock</code> query locking on the
+   * key to obtain work form the work queue. If the {@link WorkItem} is processed the entry is
+   * updated as not 'available'.
+   */
+  public static Consumer advanced() {
+    return new Consumer(OBTAIN_WORK_QUERY_ADVANCED);
   }
 
   /**
@@ -86,6 +117,7 @@ public class Consumer {
   }
 
   public static class WorkConsumerException extends RuntimeException {
+
     WorkConsumerException(Throwable cause) {
       super(cause);
     }
