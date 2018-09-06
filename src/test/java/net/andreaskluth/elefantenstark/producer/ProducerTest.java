@@ -27,10 +27,9 @@ class ProducerTest {
 
   private WorkItem queryForWorkItem(Connection connection) {
     try (Statement statement = connection.createStatement();
-        ResultSet result = statement.executeQuery("SELECT key, value, version FROM queue")) {
-      if (result.next()) {
-        return new WorkItem(
-            result.getString("key"), result.getString("value"), result.getLong("version"));
+        ResultSet rs = statement.executeQuery("SELECT key, value, version FROM queue")) {
+      if (rs.next()) {
+        return new WorkItem(rs.getString("key"), rs.getString("value"), rs.getLong("version"));
       }
     } catch (SQLException e) {
       e.printStackTrace();

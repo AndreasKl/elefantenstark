@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
+import java.io.IOException;
 import java.sql.Connection;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
@@ -56,15 +57,22 @@ class ConsumerTest {
   }
 
   @Test
-  void fetchesAndDistributesWorkOrderedByKeyAndVersion() throws Exception {
+  void fetchesAndDistributesWorkOrderedByKeyAndVersionTransactionScoped() throws Exception {
+    validateConsumer(Consumer.advancedTransactionScoped());
+  }
+
+  @Test
+  void fetchesAndDistributesWorkOrderedByKeyAndVersionSessionScoped() throws Exception {
+    validateConsumer(Consumer.advancedSessionScoped());
+  }
+
+  private void validateConsumer(Consumer advanced) throws IOException {
     AtomicReference<WorkItem> capturedWorkA = new AtomicReference<>();
     AtomicReference<WorkItem> capturedWorkB = new AtomicReference<>();
     AtomicReference<WorkItem> capturedWorkC = new AtomicReference<>();
 
     CountDownLatch blockLatch = new CountDownLatch(1);
     CountDownLatch syncLatch = new CountDownLatch(1);
-
-    Consumer advanced = Consumer.advanced();
 
     withPostgresConnectionsAndSchema(
         connections -> {
@@ -120,16 +128,16 @@ class ConsumerTest {
   }
 
   private void capturingConsume(AtomicReference<WorkItem> work, Connection connection) {
-    Consumer.simple().next(work::set).accept(connection);
+    Consumer.simpleTransactionScoped().next(work::set).accept(connection);
   }
 
   private void advancedCapturingConsume(AtomicReference<WorkItem> work, Connection connection) {
-    Consumer.advanced().next(work::set).accept(connection);
+    Consumer.advancedTransactionScoped().next(work::set).accept(connection);
   }
 
   private void failingConsume(Connection connection) {
     try {
-      Consumer.simple()
+      Consumer.simpleTransactionScoped()
           .next(
               workItem -> {
                 throw new IllegalStateException();

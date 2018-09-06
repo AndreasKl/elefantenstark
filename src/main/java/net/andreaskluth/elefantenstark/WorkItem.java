@@ -47,6 +47,6 @@ public class WorkItem {
 
   @Override
   public String toString() {
-    return "WorkItem{key='" + key + "'" + ", value='" + value + "'" + ", version=" + version + "}";
+    return "WorkItem{key='" + key + "', value='" + value + "', version=" + version + "}";
   }
 }

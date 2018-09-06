@@ -1,6 +1,7 @@
 CREATE TABLE IF NOT EXISTS queue (
   id bigserial PRIMARY KEY,
   available boolean DEFAULT TRUE NOT NULL,
+  retry_count int DEFAULT 0 NOT NULL,
   "key" text,
   value text,
   version bigint
