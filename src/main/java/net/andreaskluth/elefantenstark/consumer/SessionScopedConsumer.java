@@ -38,6 +38,7 @@ class SessionScopedConsumer extends Consumer {
         connection.prepareStatement(
             "UPDATE queue SET retry_count = (SELECT retry_count FROM queue WHERE id = ?) + 1 WHERE id = ?")) {
       preparedStatement.setInt(1, workItemContext.id());
+      preparedStatement.setInt(2, workItemContext.id());
       preparedStatement.execute();
     }
   }
