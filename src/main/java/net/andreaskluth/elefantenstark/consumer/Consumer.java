@@ -3,12 +3,12 @@ package net.andreaskluth.elefantenstark.consumer;
 import static java.util.Objects.requireNonNull;
 import static net.andreaskluth.elefantenstark.consumer.ConsumerQueries.OBTAIN_WORK_QUERY_SESSION_SCOPED;
 import static net.andreaskluth.elefantenstark.consumer.ConsumerQueries.OBTAIN_WORK_QUERY_TRANSACTION_SCOPED;
-import static net.andreaskluth.elefantenstark.consumer.ConsumerQueries.SIMPLE_OBTAIN_WORK_QUERY_TRANSACTION_SCOPED;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Optional;
 import net.andreaskluth.elefantenstark.WorkItem;
 
 public abstract class Consumer {
@@ -21,20 +21,11 @@ public abstract class Consumer {
   }
 
   /**
-   * Creates a {@link Consumer} using a <code>FOR UPDATE SKIP LOCKED</code> query to obtain work
-   * form the work queue. If the {@link WorkItem} is processed the entry is deleted from the
-   * database.
-   */
-  public static Consumer simpleTransactionScoped() {
-    return new TransactionScopedConsumer(SIMPLE_OBTAIN_WORK_QUERY_TRANSACTION_SCOPED);
-  }
-
-  /**
    * Creates a {@link Consumer} using a <code>pg_try_advisory_xact_lock</code> query locking on the
    * key to obtain work form the work queue. If the {@link WorkItem} is processed the entry is
    * updated as not 'available'.
    */
-  public static Consumer advancedTransactionScoped() {
+  public static Consumer transactionScoped() {
     return new TransactionScopedConsumer(OBTAIN_WORK_QUERY_TRANSACTION_SCOPED);
   }
 
@@ -45,7 +36,7 @@ public abstract class Consumer {
    * still in use and the lock was not released. The lock will not be freed until the connection is
    * closed.
    */
-  public static Consumer advancedSessionScoped() {
+  public static Consumer sessionScoped() {
     return new SessionScopedConsumer(OBTAIN_WORK_QUERY_SESSION_SCOPED);
   }
 
@@ -59,14 +50,15 @@ public abstract class Consumer {
   public abstract java.util.function.Consumer<Connection> next(
       java.util.function.Consumer<WorkItem> worker);
 
-  protected WorkItemContext fetchWorkAndLock(Connection connection) throws SQLException {
-
+  protected Optional<WorkItemContext> fetchWorkAndLock(Connection connection) {
     try (Statement statement = connection.createStatement();
-        ResultSet rawWorkEntry = statement.executeQuery(obtainWorkQuery())) {;
+        ResultSet rawWorkEntry = statement.executeQuery(obtainWorkQuery())) {
       if (!rawWorkEntry.next()) {
-        return null;
+        return Optional.empty();
       }
-      return mapWorkEntryFrom(rawWorkEntry);
+      return Optional.of(mapWorkEntryFrom(rawWorkEntry));
+    } catch (SQLException e) {
+      throw new ConsumerException(e);
     }
   }
 
@@ -84,19 +76,12 @@ public abstract class Consumer {
     return obtainWorkQuery;
   }
 
-  public static class WorkConsumerException extends RuntimeException {
-
-    WorkConsumerException(Throwable cause) {
-      super(cause);
-    }
-  }
-
-  static class WorkItemContext {
+  public static class WorkItemContext {
 
     private final int id;
     private final WorkItem workItem;
 
-    WorkItemContext(int id, WorkItem workItem) {
+    protected WorkItemContext(int id, WorkItem workItem) {
       this.id = id;
       this.workItem = requireNonNull(workItem);
     }
@@ -107,6 +92,13 @@ public abstract class Consumer {
 
     WorkItem workItem() {
       return workItem;
+    }
+  }
+
+  public static class ConsumerException extends RuntimeException {
+
+    protected ConsumerException(Throwable cause) {
+      super(cause);
     }
   }
 }

@@ -39,8 +39,9 @@ public class Initializer {
   }
 
   public class DatabaseInitializationException extends RuntimeException {
-    DatabaseInitializationException(Throwable cause) {
+    public DatabaseInitializationException(Throwable cause) {
       super(cause);
     }
   }
+
 }

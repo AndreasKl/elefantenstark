@@ -1,46 +1,53 @@
 package net.andreaskluth.elefantenstark.consumer;
 
 import static net.andreaskluth.elefantenstark.PostgresSupport.withPostgresAndSchema;
-import static net.andreaskluth.elefantenstark.PostgresSupport.withPostgresConnectionsAndSchema;
-import static org.junit.jupiter.api.Assertions.assertAll;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static net.andreaskluth.elefantenstark.consumer.ConsumerTestSupport.assertNextWorkItemIsCaptured;
+import static net.andreaskluth.elefantenstark.consumer.ConsumerTestSupport.capturingConsume;
+import static net.andreaskluth.elefantenstark.consumer.ConsumerTestSupport.failingConsume;
+import static net.andreaskluth.elefantenstark.consumer.ConsumerTestSupport.scheduleSomeWork;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
 import java.io.IOException;
-import java.sql.Connection;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
 import net.andreaskluth.elefantenstark.WorkItem;
-import net.andreaskluth.elefantenstark.producer.Producer;
 import org.junit.jupiter.api.Test;
 
 class ConsumerTest {
 
   @Test
   void fetchesAndDistributesWorkOrderedByVersion() throws Exception {
-    AtomicReference<WorkItem> capturedWork = new AtomicReference<>();
+    fetchesAndDistributesWorkOrderedByVersion(Consumer.transactionScoped());
+    fetchesAndDistributesWorkOrderedByVersion(Consumer.sessionScoped());
+  }
 
+  private void fetchesAndDistributesWorkOrderedByVersion(Consumer consumer) throws IOException {
+    AtomicReference<WorkItem> capturedWork = new AtomicReference<>();
     withPostgresAndSchema(
         connection -> {
           scheduleSomeWork(connection);
-          capturingConsume(capturedWork, connection);
+          capturingConsume(connection, consumer, capturedWork);
         });
-
     assertNextWorkItemIsCaptured(capturedWork.get(), new WorkItem("a", "b", 23));
   }
 
   @Test
   void whenTheWorkerFailsTheWorkCanBeReConsumed() throws Exception {
+    whenTheWorkerFailsTheWorkCanBeReConsumed(Consumer.transactionScoped());
+    whenTheWorkerFailsTheWorkCanBeReConsumed(Consumer.sessionScoped());
+  }
+
+  private void whenTheWorkerFailsTheWorkCanBeReConsumed(Consumer consumer) throws IOException {
     AtomicReference<WorkItem> capturedWorkA = new AtomicReference<>();
     AtomicReference<WorkItem> capturedWorkB = new AtomicReference<>();
 
     withPostgresAndSchema(
         connection -> {
           scheduleSomeWork(connection);
-          failingConsume(connection);
-          capturingConsume(capturedWorkA, connection);
-          failingConsume(connection);
-          capturingConsume(capturedWorkB, connection);
+          failingConsume(connection, consumer);
+          capturingConsume(connection, consumer, capturedWorkA);
+          failingConsume(connection, consumer);
+          failingConsume(connection, consumer);
+          capturingConsume(connection, consumer, capturedWorkB);
         });
 
     assertNextWorkItemIsCaptured(capturedWorkA.get(), new WorkItem("a", "b", 23));
@@ -49,113 +56,13 @@ class ConsumerTest {
 
   @Test
   void ifThereIsNoWorkNothingIsConsumed() throws Exception {
+    ifThereIsNoWorkNothingIsConsumed(Consumer.transactionScoped());
+    ifThereIsNoWorkNothingIsConsumed(Consumer.sessionScoped());
+  }
+
+  private void ifThereIsNoWorkNothingIsConsumed(Consumer consumer) throws IOException {
     AtomicReference<WorkItem> capturedWork = new AtomicReference<>();
-
-    withPostgresAndSchema(connection -> capturingConsume(capturedWork, connection));
-
+    withPostgresAndSchema(connection -> capturingConsume(connection, consumer, capturedWork));
     assertNull(capturedWork.get());
-  }
-
-  @Test
-  void fetchesAndDistributesWorkOrderedByKeyAndVersionTransactionScoped() throws Exception {
-    validateConsumer(Consumer.advancedTransactionScoped());
-  }
-
-  @Test
-  void fetchesAndDistributesWorkOrderedByKeyAndVersionSessionScoped() throws Exception {
-    validateConsumer(Consumer.advancedSessionScoped());
-  }
-
-  private void validateConsumer(Consumer advanced) throws IOException {
-    AtomicReference<WorkItem> capturedWorkA = new AtomicReference<>();
-    AtomicReference<WorkItem> capturedWorkB = new AtomicReference<>();
-    AtomicReference<WorkItem> capturedWorkC = new AtomicReference<>();
-
-    CountDownLatch blockLatch = new CountDownLatch(1);
-    CountDownLatch syncLatch = new CountDownLatch(1);
-
-    withPostgresConnectionsAndSchema(
-        connections -> {
-          Connection connection = connections.get();
-          Connection anotherConnection = connections.get();
-
-          scheduleSomeWork(connection);
-
-          Thread worker =
-              new Thread(
-                  () ->
-                      advanced
-                          .next(
-                              workItem -> {
-                                capturedWorkA.set(workItem);
-                                syncLatch.countDown();
-                                awaitLatch(blockLatch);
-                              })
-                          .accept(connection));
-          worker.start();
-
-          awaitLatch(syncLatch);
-          // Obtain the next free work item while the other thread holds the first.
-          advancedCapturingConsume(capturedWorkB, anotherConnection);
-          blockLatch.countDown();
-
-          joinThread(worker);
-
-          advancedCapturingConsume(capturedWorkC, anotherConnection);
-        });
-
-    assertNextWorkItemIsCaptured(capturedWorkA.get(), new WorkItem("a", "b", 23));
-    assertNextWorkItemIsCaptured(capturedWorkB.get(), new WorkItem("c", "d", 12));
-    assertNextWorkItemIsCaptured(capturedWorkC.get(), new WorkItem("a", "b", 24));
-  }
-
-  private void joinThread(final Thread worker) {
-    try {
-      worker.join();
-    } catch (InterruptedException e) {
-      Thread.currentThread().interrupt();
-      throw new RuntimeException(e);
-    }
-  }
-
-  private void awaitLatch(final CountDownLatch latch) {
-    try {
-      latch.await();
-    } catch (InterruptedException e) {
-      Thread.currentThread().interrupt();
-      throw new RuntimeException(e);
-    }
-  }
-
-  private void capturingConsume(AtomicReference<WorkItem> work, Connection connection) {
-    Consumer.simpleTransactionScoped().next(work::set).accept(connection);
-  }
-
-  private void advancedCapturingConsume(AtomicReference<WorkItem> work, Connection connection) {
-    Consumer.advancedTransactionScoped().next(work::set).accept(connection);
-  }
-
-  private void failingConsume(Connection connection) {
-    try {
-      Consumer.simpleTransactionScoped()
-          .next(
-              workItem -> {
-                throw new IllegalStateException();
-              })
-          .accept(connection);
-    } catch (RuntimeException ex) {
-      // Ignore
-    }
-  }
-
-  private void assertNextWorkItemIsCaptured(WorkItem actual, WorkItem expected) {
-    assertAll("work", () -> assertEquals(expected, actual));
-  }
-
-  private void scheduleSomeWork(Connection connection) {
-    Producer producer = new Producer();
-    producer.produce(new WorkItem("a", "b", 23)).apply(connection);
-    producer.produce(new WorkItem("a", "b", 24)).apply(connection);
-    producer.produce(new WorkItem("c", "d", 12)).apply(connection);
   }
 }

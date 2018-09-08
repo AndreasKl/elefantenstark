@@ -1,7 +1,5 @@
 package net.andreaskluth.elefantenstark.consumer;
 
-import static net.andreaskluth.elefantenstark.consumer.ConsumerQueries.UNLOCK_WORK_QUERY_SESSION_SCOPED;
-
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -17,37 +15,37 @@ class SessionScopedConsumer extends Consumer {
   public java.util.function.Consumer<Connection> next(
       java.util.function.Consumer<WorkItem> worker) {
 
-    return connection -> {
-      try {
-        WorkItemContext workItemContext = fetchWorkAndLock(connection);
-        try {
-          updateRetryCount(connection, workItemContext);
-          worker.accept(workItemContext.workItem());
-        } finally {
-          unlock(connection, workItemContext.workItem());
-        }
-      } catch (SQLException e) {
-        throw new WorkConsumerException(e);
-      }
-    };
+    return connection ->
+        fetchWorkAndLock(connection)
+            .ifPresent(
+                wic -> {
+                  try {
+                    worker.accept(wic.workItem());
+                    markAsProcessed(connection, wic);
+                  } finally {
+                    unlock(connection, wic.workItem());
+                  }
+                });
   }
 
-  private void updateRetryCount(Connection connection, WorkItemContext workItemContext)
-      throws SQLException {
-    try (PreparedStatement preparedStatement =
-        connection.prepareStatement(
-            "UPDATE queue SET retry_count = (SELECT retry_count FROM queue WHERE id = ?) + 1 WHERE id = ?")) {
-      preparedStatement.setInt(1, workItemContext.id());
-      preparedStatement.setInt(2, workItemContext.id());
-      preparedStatement.execute();
+  private void markAsProcessed(Connection connection, WorkItemContext workItemContext) {
+    try (PreparedStatement statement =
+        connection.prepareStatement("UPDATE queue SET available = false WHERE id = ?")) {
+      statement.setInt(1, workItemContext.id());
+      statement.execute();
+    } catch (SQLException e) {
+      throw new ConsumerException(e);
     }
   }
 
-  private void unlock(Connection connection, WorkItem workItem) throws SQLException {
+  private void unlock(Connection connection, WorkItem workItem) {
     try (PreparedStatement preparedStatement =
-        connection.prepareStatement(UNLOCK_WORK_QUERY_SESSION_SCOPED)) {
+        connection.prepareStatement(
+            "SELECT pg_advisory_unlock('queue'::regclass::int, ('x'||substr(md5(?),1,8))::bit(32)::int);")) {
       preparedStatement.setString(1, workItem.key());
       preparedStatement.execute();
+    } catch (SQLException e) {
+      throw new ConsumerException(e);
     }
   }
 }

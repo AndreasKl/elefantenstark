@@ -2,6 +2,7 @@ package net.andreaskluth.elefantenstark.consumer;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.Optional;
 import net.andreaskluth.elefantenstark.WorkItem;
 
 class TransactionScopedConsumer extends Consumer {
@@ -24,10 +25,8 @@ class TransactionScopedConsumer extends Consumer {
       try {
         try {
           connection.setAutoCommit(false);
-          WorkItemContext workItemContext = fetchWorkAndLock(connection);
-          if (workItemContext != null) {
-            worker.accept(workItemContext.workItem());
-          }
+          Optional<WorkItemContext> workItemContext = fetchWorkAndLock(connection);
+          workItemContext.ifPresent(wic -> worker.accept(wic.workItem()));
           connection.commit();
         } catch (Exception ex) {
           connection.rollback();
@@ -36,7 +35,7 @@ class TransactionScopedConsumer extends Consumer {
           connection.setAutoCommit(true);
         }
       } catch (SQLException e) {
-        throw new WorkConsumerException(e);
+        throw new ConsumerException(e);
       }
     };
   }

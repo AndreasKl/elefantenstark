@@ -29,7 +29,7 @@ public class PostgresSupport {
   }
 
   public static void withPostgres(Consumer<Connection> postgresConnectionConsumer)
-    throws IOException {
+      throws IOException {
 
     withPostgresConnections(connections -> postgresConnectionConsumer.accept(connections.get()));
   }
@@ -72,14 +72,13 @@ public class PostgresSupport {
     }
 
     public Connection get() {
-      final Connection connection;
       try {
-        connection = embeddedPostgres.getPostgresDatabase().getConnection();
+        final Connection connection = embeddedPostgres.getPostgresDatabase().getConnection();
+        connections.add(connection);
+        return connection;
       } catch (SQLException e) {
         throw new RuntimeException(e);
       }
-      connections.add(connection);
-      return connection;
     }
   }
 }
