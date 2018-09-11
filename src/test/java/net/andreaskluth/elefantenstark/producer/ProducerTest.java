@@ -17,7 +17,7 @@ class ProducerTest {
     withPostgresAndSchema(
         connection -> {
           WorkItem workItem = new WorkItem("_test_key_", "_test_value_", 0);
-          new Producer().produce(workItem).apply(connection);
+          new Producer().produce(connection, workItem);
 
           WorkItem queuedWorkItem = queryForWorkItem(connection);
 

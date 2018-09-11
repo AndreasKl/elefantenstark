@@ -42,14 +42,13 @@ class MultiThreadedConsumerTest {
           Thread worker =
               new Thread(
                   () ->
-                      consumer
-                          .next(
-                              workItem -> {
-                                capturedWorkA.set(workItem);
-                                syncLatch.countDown();
-                                awaitLatch(blockLatch);
-                              })
-                          .accept(connection));
+                      consumer.next(
+                          connection,
+                          workItem -> {
+                            capturedWorkA.set(workItem);
+                            syncLatch.countDown();
+                            awaitLatch(blockLatch);
+                          }));
           worker.start();
 
           awaitLatch(syncLatch);

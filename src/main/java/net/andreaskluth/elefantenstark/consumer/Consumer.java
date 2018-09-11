@@ -44,11 +44,10 @@ public abstract class Consumer {
    * Obtains the next work item from the queue and provides the data to the @worker. If the @worker
    * fails with an {@link Exception} the work is returned and available for the next @worker.
    *
+   * @param connection the connection the work is retrieved from.
    * @param worker the worker consuming the @{@link WorkItem} to work on.
-   * @return a {@link java.util.function.Consumer} of {@link Connection}.
    */
-  public abstract java.util.function.Consumer<Connection> next(
-      java.util.function.Consumer<WorkItem> worker);
+  public abstract void next(Connection connection, java.util.function.Consumer<WorkItem> worker);
 
   protected Optional<WorkItemContext> fetchWorkAndLock(Connection connection) {
     try (Statement statement = connection.createStatement();

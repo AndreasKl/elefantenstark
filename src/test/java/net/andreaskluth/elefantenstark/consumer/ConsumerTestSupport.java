@@ -16,24 +16,23 @@ class ConsumerTestSupport {
 
   static void scheduleSomeWork(Connection connection) {
     Producer producer = new Producer();
-    producer.produce(new WorkItem("a", "b", 23)).apply(connection);
-    producer.produce(new WorkItem("a", "b", 24)).apply(connection);
-    producer.produce(new WorkItem("c", "d", 12)).apply(connection);
+    producer.produce(connection, new WorkItem("a", "b", 23));
+    producer.produce(connection, new WorkItem("a", "b", 24));
+    producer.produce(connection, new WorkItem("c", "d", 12));
   }
 
   static void capturingConsume(
       Connection connection, Consumer consumer, AtomicReference<WorkItem> capture) {
-    consumer.next(capture::set).accept(connection);
+    consumer.next(connection, capture::set);
   }
 
   static void failingConsume(Connection connection, Consumer consumer) {
     try {
-      consumer
-          .next(
-              workItem -> {
-                throw new IllegalStateException();
-              })
-          .accept(connection);
+      consumer.next(
+          connection,
+          workItem -> {
+            throw new IllegalStateException();
+          });
     } catch (IllegalStateException ignored) {
       // The exception should bubble up, ignore it here.
     }

@@ -3,6 +3,7 @@ package net.andreaskluth.elefantenstark.consumer;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.Objects;
 import net.andreaskluth.elefantenstark.WorkItem;
 
 class SessionScopedConsumer extends Consumer {
@@ -12,20 +13,20 @@ class SessionScopedConsumer extends Consumer {
   }
 
   @Override
-  public java.util.function.Consumer<Connection> next(
-      java.util.function.Consumer<WorkItem> worker) {
+  public void next(Connection connection, java.util.function.Consumer<WorkItem> worker) {
+    Objects.requireNonNull(connection);
+    Objects.requireNonNull(worker);
 
-    return connection ->
-        fetchWorkAndLock(connection)
-            .ifPresent(
-                wic -> {
-                  try {
-                    worker.accept(wic.workItem());
-                    markAsProcessed(connection, wic);
-                  } finally {
-                    unlock(connection, wic.workItem());
-                  }
-                });
+    fetchWorkAndLock(connection)
+        .ifPresent(
+            wic -> {
+              try {
+                worker.accept(wic.workItem());
+                markAsProcessed(connection, wic);
+              } finally {
+                unlock(connection, wic.workItem());
+              }
+            });
   }
 
   private void markAsProcessed(Connection connection, WorkItemContext workItemContext) {
