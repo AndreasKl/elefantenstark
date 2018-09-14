@@ -19,33 +19,38 @@ public class PostgresSupport {
     throw new RuntimeException("Not permitted");
   }
 
-  private static void withPostgresConnections(
-      Consumer<PostgresConnectionProvider> connectionConsumer) throws IOException {
+  private static EmbeddedPostgres start() {
+    try {
+      return EmbeddedPostgres.builder().start();
+    } catch (IOException ex) {
+      log.error("Not able to start postgres.", ex);
+      throw new RuntimeException(ex);
+    }
+  }
 
-    try (EmbeddedPostgres postgres = EmbeddedPostgres.builder().start();
-        PostgresConnectionProvider provider = new PostgresConnectionProvider(postgres)) {
+  private static void withPostgresConnections(
+      Consumer<PostgresConnectionProvider> connectionConsumer) {
+
+    try (PostgresConnectionProvider provider = new PostgresConnectionProvider(start())) {
       connectionConsumer.accept(provider);
     }
   }
 
-  public static void withPostgres(Consumer<Connection> postgresConnectionConsumer)
-      throws IOException {
-
+  public static void withPostgres(Consumer<Connection> postgresConnectionConsumer) {
     withPostgresConnections(connections -> postgresConnectionConsumer.accept(connections.get()));
   }
 
   public static void withPostgresConnectionsAndSchema(
-      Consumer<PostgresConnectionProvider> connectionConsumer) throws IOException {
+      Consumer<PostgresConnectionProvider> postgresConnectionConsumer) {
 
     withPostgresConnections(
         provider -> {
-          new Initializer().build().accept(provider.get());
-          connectionConsumer.accept(provider);
+          new Initializer().build(provider.get());
+          postgresConnectionConsumer.accept(provider);
         });
   }
 
-  public static void withPostgresAndSchema(Consumer<Connection> postgresConnectionConsumer)
-      throws IOException {
+  public static void withPostgresAndSchema(Consumer<Connection> postgresConnectionConsumer) {
 
     withPostgresConnectionsAndSchema(
         connections -> postgresConnectionConsumer.accept(connections.get()));

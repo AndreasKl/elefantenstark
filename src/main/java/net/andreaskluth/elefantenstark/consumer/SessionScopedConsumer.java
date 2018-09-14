@@ -3,34 +3,42 @@ package net.andreaskluth.elefantenstark.consumer;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.Objects;
+import java.util.Optional;
 import net.andreaskluth.elefantenstark.WorkItem;
 
 class SessionScopedConsumer extends Consumer {
+
+  private static final String MARK_AS_NOT_AVAILABLE =
+      "UPDATE queue SET available = false WHERE id = ?";
+  private static final String UNLOCK_ADVISORY_LOCK =
+      "SELECT pg_advisory_unlock('queue'::regclass::int, ('x'||substr(md5(?),1,8))::bit(32)::int);";
 
   SessionScopedConsumer(String obtainWorkQuery) {
     super(obtainWorkQuery);
   }
 
   @Override
-  public java.util.function.Consumer<Connection> next(
-      java.util.function.Consumer<WorkItem> worker) {
+  public <T> Optional<T> next(
+      Connection connection, java.util.function.Function<WorkItem, T> worker) {
+    Objects.requireNonNull(connection);
+    Objects.requireNonNull(worker);
 
-    return connection ->
-        fetchWorkAndLock(connection)
-            .ifPresent(
-                wic -> {
-                  try {
-                    worker.accept(wic.workItem());
-                    markAsProcessed(connection, wic);
-                  } finally {
-                    unlock(connection, wic.workItem());
-                  }
-                });
+    return fetchWorkAndLock(connection)
+        .map(
+            wic -> {
+              try {
+                T result = worker.apply(wic.workItem());
+                markAsProcessed(connection, wic);
+                return result;
+              } finally {
+                unlock(connection, wic.workItem());
+              }
+            });
   }
 
   private void markAsProcessed(Connection connection, WorkItemContext workItemContext) {
-    try (PreparedStatement statement =
-        connection.prepareStatement("UPDATE queue SET available = false WHERE id = ?")) {
+    try (PreparedStatement statement = connection.prepareStatement(MARK_AS_NOT_AVAILABLE)) {
       statement.setInt(1, workItemContext.id());
       statement.execute();
     } catch (SQLException e) {
@@ -39,9 +47,7 @@ class SessionScopedConsumer extends Consumer {
   }
 
   private void unlock(Connection connection, WorkItem workItem) {
-    try (PreparedStatement preparedStatement =
-        connection.prepareStatement(
-            "SELECT pg_advisory_unlock('queue'::regclass::int, ('x'||substr(md5(?),1,8))::bit(32)::int);")) {
+    try (PreparedStatement preparedStatement = connection.prepareStatement(UNLOCK_ADVISORY_LOCK)) {
       preparedStatement.setString(1, workItem.key());
       preparedStatement.execute();
     } catch (SQLException e) {
