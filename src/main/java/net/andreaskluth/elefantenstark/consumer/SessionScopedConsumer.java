@@ -11,7 +11,7 @@ class SessionScopedConsumer extends Consumer {
 
   private static final String MARK_AS_NOT_AVAILABLE =
       "UPDATE queue SET available = false WHERE id = ?";
-  private static final String UNLOCK_ADVISoRY_LOCK =
+  private static final String UNLOCK_ADVISORY_LOCK =
       "SELECT pg_advisory_unlock('queue'::regclass::int, ('x'||substr(md5(?),1,8))::bit(32)::int);";
 
   SessionScopedConsumer(String obtainWorkQuery) {
@@ -47,7 +47,7 @@ class SessionScopedConsumer extends Consumer {
   }
 
   private void unlock(Connection connection, WorkItem workItem) {
-    try (PreparedStatement preparedStatement = connection.prepareStatement(UNLOCK_ADVISoRY_LOCK)) {
+    try (PreparedStatement preparedStatement = connection.prepareStatement(UNLOCK_ADVISORY_LOCK)) {
       preparedStatement.setString(1, workItem.key());
       preparedStatement.execute();
     } catch (SQLException e) {
