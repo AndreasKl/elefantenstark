@@ -15,14 +15,12 @@ public class Initializer {
 
   private static final String POSTGRES_SCHEMA_SQL = "postgres_schema.sql";
 
-  public Consumer<Connection> build() {
-    return connection -> {
-      try (Statement statement = connection.createStatement()) {
-        statement.execute(loadSchemaScript());
-      } catch (SQLException e) {
-        throw new DatabaseInitializationException(e);
-      }
-    };
+  public void build(Connection connection) {
+    try (Statement statement = connection.createStatement()) {
+      statement.execute(loadSchemaScript());
+    } catch (SQLException e) {
+      throw new DatabaseInitializationException(e);
+    }
   }
 
   protected String loadSchemaScript() {
@@ -43,5 +41,4 @@ public class Initializer {
       super(cause);
     }
   }
-
 }

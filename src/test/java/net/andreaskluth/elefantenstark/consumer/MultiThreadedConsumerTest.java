@@ -1,11 +1,10 @@
 package net.andreaskluth.elefantenstark.consumer;
 
 import static net.andreaskluth.elefantenstark.PostgresSupport.withPostgresConnectionsAndSchema;
+import static net.andreaskluth.elefantenstark.TestData.scheduleThreeWorkItems;
 import static net.andreaskluth.elefantenstark.consumer.ConsumerTestSupport.assertNextWorkItemIsCaptured;
 import static net.andreaskluth.elefantenstark.consumer.ConsumerTestSupport.capturingConsume;
-import static net.andreaskluth.elefantenstark.consumer.ConsumerTestSupport.scheduleSomeWork;
 
-import java.io.IOException;
 import java.sql.Connection;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
@@ -15,16 +14,16 @@ import org.junit.jupiter.api.Test;
 class MultiThreadedConsumerTest {
 
   @Test
-  void fetchesAndDistributesWorkOrderedByKeyAndVersionTransactionScoped() throws Exception {
+  void fetchesAndDistributesWorkOrderedByKeyAndVersionTransactionScoped() {
     validateConsumer(Consumer.transactionScoped());
   }
 
   @Test
-  void fetchesAndDistributesWorkOrderedByKeyAndVersionSessionScoped() throws Exception {
+  void fetchesAndDistributesWorkOrderedByKeyAndVersionSessionScoped() {
     validateConsumer(Consumer.sessionScoped());
   }
 
-  private void validateConsumer(Consumer consumer) throws IOException {
+  private void validateConsumer(Consumer consumer) {
     AtomicReference<WorkItem> capturedWorkA = new AtomicReference<>();
     AtomicReference<WorkItem> capturedWorkB = new AtomicReference<>();
     AtomicReference<WorkItem> capturedWorkC = new AtomicReference<>();
@@ -37,7 +36,7 @@ class MultiThreadedConsumerTest {
           Connection connection = connections.get();
           Connection anotherConnection = connections.get();
 
-          scheduleSomeWork(connection);
+          scheduleThreeWorkItems(connection);
 
           Thread worker =
               new Thread(
@@ -48,6 +47,7 @@ class MultiThreadedConsumerTest {
                             capturedWorkA.set(workItem);
                             syncLatch.countDown();
                             awaitLatch(blockLatch);
+                            return null;
                           }));
           worker.start();
 

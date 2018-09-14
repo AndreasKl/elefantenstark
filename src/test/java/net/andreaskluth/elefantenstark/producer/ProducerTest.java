@@ -13,7 +13,7 @@ import org.junit.jupiter.api.Test;
 class ProducerTest {
 
   @Test
-  void addsWorkItemsToQueue() throws Exception {
+  void addsWorkItemsToQueue() {
     withPostgresAndSchema(
         connection -> {
           WorkItem workItem = new WorkItem("_test_key_", "_test_value_", 0);

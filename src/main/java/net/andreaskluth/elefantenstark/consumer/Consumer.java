@@ -47,7 +47,7 @@ public abstract class Consumer {
    * @param connection the connection the work is retrieved from.
    * @param worker the worker consuming the @{@link WorkItem} to work on.
    */
-  public abstract void next(Connection connection, java.util.function.Consumer<WorkItem> worker);
+  public abstract <T> Optional<T> next(Connection connection, java.util.function.Function<WorkItem, T> worker);
 
   protected Optional<WorkItemContext> fetchWorkAndLock(Connection connection) {
     try (Statement statement = connection.createStatement();

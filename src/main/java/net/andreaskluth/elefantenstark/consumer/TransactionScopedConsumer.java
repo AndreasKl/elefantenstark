@@ -13,16 +13,18 @@ class TransactionScopedConsumer extends Consumer {
   }
 
   @Override
-  public void next(Connection connection, java.util.function.Consumer<WorkItem> worker) {
+  public <T> Optional<T> next(
+      Connection connection, java.util.function.Function<WorkItem, T> worker) {
     Objects.requireNonNull(connection);
     Objects.requireNonNull(worker);
 
     try {
       try {
         connection.setAutoCommit(false);
-        Optional<WorkItemContext> workItemContext = fetchWorkAndLock(connection);
-        workItemContext.ifPresent(wic -> worker.accept(wic.workItem()));
+        Optional<T> result =
+            fetchWorkAndLock(connection).map(WorkItemContext::workItem).map(worker);
         connection.commit();
+        return result;
       } catch (Exception ex) {
         connection.rollback();
         throw ex;

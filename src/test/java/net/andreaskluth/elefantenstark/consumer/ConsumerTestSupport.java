@@ -6,7 +6,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import java.sql.Connection;
 import java.util.concurrent.atomic.AtomicReference;
 import net.andreaskluth.elefantenstark.WorkItem;
-import net.andreaskluth.elefantenstark.producer.Producer;
 
 class ConsumerTestSupport {
 
@@ -14,16 +13,14 @@ class ConsumerTestSupport {
     assertAll("work", () -> assertEquals(expected, actual));
   }
 
-  static void scheduleSomeWork(Connection connection) {
-    Producer producer = new Producer();
-    producer.produce(connection, new WorkItem("a", "b", 23));
-    producer.produce(connection, new WorkItem("a", "b", 24));
-    producer.produce(connection, new WorkItem("c", "d", 12));
-  }
-
   static void capturingConsume(
       Connection connection, Consumer consumer, AtomicReference<WorkItem> capture) {
-    consumer.next(connection, capture::set);
+    consumer.next(
+        connection,
+        workItem -> {
+          capture.set(workItem);
+          return null;
+        });
   }
 
   static void failingConsume(Connection connection, Consumer consumer) {
