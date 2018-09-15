@@ -11,7 +11,7 @@ public class WorkItem {
   public WorkItem(String key, String value, long version) {
     this.key = Objects.requireNonNull(key);
     this.value = Objects.requireNonNull(value);
-    this.version = Objects.requireNonNull(version);
+    this.version = version;
   }
 
   public String key() {

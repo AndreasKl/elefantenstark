@@ -32,7 +32,7 @@ class SessionScopedConsumer extends Consumer {
                 markAsProcessed(connection, wic);
                 return result;
               } finally {
-                unlock(connection, wic.workItem());
+                unlock(connection, wic);
               }
             });
   }
@@ -46,9 +46,9 @@ class SessionScopedConsumer extends Consumer {
     }
   }
 
-  private void unlock(Connection connection, WorkItem workItem) {
+  private void unlock(Connection connection, WorkItemContext workItemContext) {
     try (PreparedStatement preparedStatement = connection.prepareStatement(UNLOCK_ADVISORY_LOCK)) {
-      preparedStatement.setString(1, workItem.key());
+      preparedStatement.setString(1, workItemContext.group());
       preparedStatement.execute();
     } catch (SQLException e) {
       throw new ConsumerException(e);

@@ -47,7 +47,8 @@ public abstract class Consumer {
    * @param connection the connection the work is retrieved from.
    * @param worker the worker consuming the @{@link WorkItem} to work on.
    */
-  public abstract <T> Optional<T> next(Connection connection, java.util.function.Function<WorkItem, T> worker);
+  public abstract <T> Optional<T> next(
+      Connection connection, java.util.function.Function<WorkItem, T> worker);
 
   protected Optional<WorkItemContext> fetchWorkAndLock(Connection connection) {
     try (Statement statement = connection.createStatement();
@@ -65,6 +66,8 @@ public abstract class Consumer {
 
     return new WorkItemContext(
         rawWorkEntry.getInt("id"),
+        rawWorkEntry.getString("group"),
+        rawWorkEntry.getInt("times_processed"),
         new WorkItem(
             rawWorkEntry.getString("key"),
             rawWorkEntry.getString("value"),
@@ -78,15 +81,27 @@ public abstract class Consumer {
   public static class WorkItemContext {
 
     private final int id;
+    private final String group;
+    private final int timesProcessed;
     private final WorkItem workItem;
 
-    protected WorkItemContext(int id, WorkItem workItem) {
+    protected WorkItemContext(int id, String group, int timesProcessed, WorkItem workItem) {
       this.id = id;
+      this.group = requireNonNull(group);
+      this.timesProcessed = timesProcessed;
       this.workItem = requireNonNull(workItem);
     }
 
     int id() {
       return id;
+    }
+
+    public String group() {
+      return group;
+    }
+
+    public int timesProcessed() {
+      return timesProcessed;
     }
 
     WorkItem workItem() {
