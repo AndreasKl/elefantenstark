@@ -4,7 +4,7 @@ CREATE TABLE IF NOT EXISTS queue (
   times_processed int DEFAULT 0 NOT NULL,
   "key" text,
   value text,
-  "group" text,
+  "group" int,
   version bigint
 );
 

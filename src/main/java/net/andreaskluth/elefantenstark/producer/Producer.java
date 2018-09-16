@@ -18,7 +18,7 @@ public class Producer {
 
     try (PreparedStatement statement = connection.prepareStatement(INSERT_WORK_QUERY)) {
       statement.setString(1, workItem.key());
-      statement.setString(2, workItem.key());
+      statement.setInt(2, workItem.group());
       statement.setString(3, workItem.value());
       statement.setLong(4, workItem.version());
       return statement.execute();

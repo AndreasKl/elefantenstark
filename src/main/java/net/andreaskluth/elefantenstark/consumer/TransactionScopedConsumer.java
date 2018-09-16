@@ -1,10 +1,10 @@
 package net.andreaskluth.elefantenstark.consumer;
 
+import static java.util.Objects.requireNonNull;
+
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.Objects;
 import java.util.Optional;
-import net.andreaskluth.elefantenstark.WorkItem;
 
 class TransactionScopedConsumer extends Consumer {
 
@@ -14,15 +14,14 @@ class TransactionScopedConsumer extends Consumer {
 
   @Override
   public <T> Optional<T> next(
-      Connection connection, java.util.function.Function<WorkItem, T> worker) {
-    Objects.requireNonNull(connection);
-    Objects.requireNonNull(worker);
+      Connection connection, java.util.function.Function<WorkItemContext, T> worker) {
+    requireNonNull(connection);
+    requireNonNull(worker);
 
     try {
       try {
         connection.setAutoCommit(false);
-        Optional<T> result =
-            fetchWorkAndLock(connection).map(WorkItemContext::workItem).map(worker);
+        Optional<T> result = fetchWorkAndLock(connection).map(worker);
         connection.commit();
         return result;
       } catch (Exception ex) {
@@ -34,5 +33,10 @@ class TransactionScopedConsumer extends Consumer {
     } catch (SQLException e) {
       throw new ConsumerException(e);
     }
+  }
+
+  @Override
+  public boolean supportsStatefulProcessing() {
+    return false;
   }
 }

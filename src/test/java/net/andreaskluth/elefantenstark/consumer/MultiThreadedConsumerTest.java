@@ -8,7 +8,8 @@ import static net.andreaskluth.elefantenstark.consumer.ConsumerTestSupport.captu
 import java.sql.Connection;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
-import net.andreaskluth.elefantenstark.WorkItem;
+import net.andreaskluth.elefantenstark.WorkItemGroupedOnKey;
+import net.andreaskluth.elefantenstark.consumer.Consumer.WorkItemContext;
 import org.junit.jupiter.api.Test;
 
 class MultiThreadedConsumerTest {
@@ -24,9 +25,9 @@ class MultiThreadedConsumerTest {
   }
 
   private void validateConsumer(Consumer consumer) {
-    AtomicReference<WorkItem> capturedWorkA = new AtomicReference<>();
-    AtomicReference<WorkItem> capturedWorkB = new AtomicReference<>();
-    AtomicReference<WorkItem> capturedWorkC = new AtomicReference<>();
+    AtomicReference<WorkItemContext> capturedWorkA = new AtomicReference<>();
+    AtomicReference<WorkItemContext> capturedWorkB = new AtomicReference<>();
+    AtomicReference<WorkItemContext> capturedWorkC = new AtomicReference<>();
 
     CountDownLatch blockLatch = new CountDownLatch(1);
     CountDownLatch syncLatch = new CountDownLatch(1);
@@ -43,8 +44,8 @@ class MultiThreadedConsumerTest {
                   () ->
                       consumer.next(
                           connection,
-                          workItem -> {
-                            capturedWorkA.set(workItem);
+                          wic -> {
+                            capturedWorkA.set(wic);
                             syncLatch.countDown();
                             awaitLatch(blockLatch);
                             return null;
@@ -61,9 +62,9 @@ class MultiThreadedConsumerTest {
           capturingConsume(anotherConnection, consumer, capturedWorkC);
         });
 
-    assertNextWorkItemIsCaptured(capturedWorkA.get(), new WorkItem("a", "b", 23));
-    assertNextWorkItemIsCaptured(capturedWorkB.get(), new WorkItem("c", "d", 12));
-    assertNextWorkItemIsCaptured(capturedWorkC.get(), new WorkItem("a", "b", 24));
+    assertNextWorkItemIsCaptured(new WorkItemGroupedOnKey("a", "b", 23), capturedWorkA.get());
+    assertNextWorkItemIsCaptured(new WorkItemGroupedOnKey("c", "d", 12), capturedWorkB.get());
+    assertNextWorkItemIsCaptured(new WorkItemGroupedOnKey("a", "b", 24), capturedWorkC.get());
   }
 
   private void joinThread(final Thread worker) {
