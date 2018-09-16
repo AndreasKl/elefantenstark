@@ -45,9 +45,17 @@ public abstract class Consumer {
    * fails with an {@link Exception} the work is returned and available for the next @worker.
    *
    * @param connection the connection the work is retrieved from.
-   * @param worker the worker consuming the @{@link WorkItem} to work on.
+   * @param worker the worker consuming the @{@link WorkItemContext} containing the {@link WorkItem}
+   *     to work on.
    */
-  public abstract <T> Optional<T> next(Connection connection, java.util.function.Function<WorkItem, T> worker);
+  public abstract <T> Optional<T> next(
+      Connection connection, java.util.function.Function<WorkItemContext, T> worker);
+
+  /**
+   * @return whether the {@link Consumer} implementation can update the database state while holding
+   *     a lock, that is still persisted when the held lock is rolled back.
+   */
+  public abstract boolean supportsStatefulProcessing();
 
   protected Optional<WorkItemContext> fetchWorkAndLock(Connection connection) {
     try (Statement statement = connection.createStatement();
@@ -65,9 +73,11 @@ public abstract class Consumer {
 
     return new WorkItemContext(
         rawWorkEntry.getInt("id"),
+        rawWorkEntry.getInt("times_processed"),
         new WorkItem(
             rawWorkEntry.getString("key"),
             rawWorkEntry.getString("value"),
+            rawWorkEntry.getInt("group"),
             rawWorkEntry.getLong("version")));
   }
 
@@ -78,15 +88,21 @@ public abstract class Consumer {
   public static class WorkItemContext {
 
     private final int id;
+    private final int timesProcessed;
     private final WorkItem workItem;
 
-    protected WorkItemContext(int id, WorkItem workItem) {
+    protected WorkItemContext(int id, int timesProcessed, WorkItem workItem) {
       this.id = id;
+      this.timesProcessed = timesProcessed;
       this.workItem = requireNonNull(workItem);
     }
 
     int id() {
       return id;
+    }
+
+    public int timesProcessed() {
+      return timesProcessed;
     }
 
     WorkItem workItem() {

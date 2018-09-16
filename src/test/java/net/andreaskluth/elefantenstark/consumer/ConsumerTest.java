@@ -5,10 +5,14 @@ import static net.andreaskluth.elefantenstark.TestData.scheduleThreeWorkItems;
 import static net.andreaskluth.elefantenstark.consumer.ConsumerTestSupport.assertNextWorkItemIsCaptured;
 import static net.andreaskluth.elefantenstark.consumer.ConsumerTestSupport.capturingConsume;
 import static net.andreaskluth.elefantenstark.consumer.ConsumerTestSupport.failingConsume;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
-import net.andreaskluth.elefantenstark.WorkItem;
+import net.andreaskluth.elefantenstark.WorkItemGroupedOnKey;
+import net.andreaskluth.elefantenstark.consumer.Consumer.WorkItemContext;
 import org.junit.jupiter.api.Test;
 
 class ConsumerTest {
@@ -20,13 +24,13 @@ class ConsumerTest {
   }
 
   private void fetchesAndDistributesWorkOrderedByVersion(Consumer consumer) {
-    AtomicReference<WorkItem> capturedWork = new AtomicReference<>();
+    AtomicReference<WorkItemContext> capturedWork = new AtomicReference<>();
     withPostgresAndSchema(
         connection -> {
           scheduleThreeWorkItems(connection);
           capturingConsume(connection, consumer, capturedWork);
         });
-    assertNextWorkItemIsCaptured(capturedWork.get(), new WorkItem("a", "b", 23));
+    assertNextWorkItemIsCaptured(new WorkItemGroupedOnKey("a", "b", 23), capturedWork.get());
   }
 
   @Test
@@ -36,21 +40,27 @@ class ConsumerTest {
   }
 
   private void whenTheWorkerFailsTheWorkCanBeReConsumed(Consumer consumer) {
-    AtomicReference<WorkItem> capturedWorkA = new AtomicReference<>();
-    AtomicReference<WorkItem> capturedWorkB = new AtomicReference<>();
+    AtomicReference<WorkItemContext> captureA = new AtomicReference<>();
+    AtomicReference<WorkItemContext> captureB = new AtomicReference<>();
+    AtomicReference<WorkItemContext> captureC = new AtomicReference<>();
 
     withPostgresAndSchema(
         connection -> {
           scheduleThreeWorkItems(connection);
           failingConsume(connection, consumer);
-          capturingConsume(connection, consumer, capturedWorkA);
+          capturingConsume(connection, consumer, captureA);
           failingConsume(connection, consumer);
           failingConsume(connection, consumer);
-          capturingConsume(connection, consumer, capturedWorkB);
+          capturingConsume(connection, consumer, captureB);
+          capturingConsume(connection, consumer, captureC);
         });
 
-    assertNextWorkItemIsCaptured(capturedWorkA.get(), new WorkItem("a", "b", 23));
-    assertNextWorkItemIsCaptured(capturedWorkB.get(), new WorkItem("a", "b", 24));
+    assertEquals(consumer.supportsStatefulProcessing() ? 2 : 0, captureA.get().timesProcessed());
+    assertNextWorkItemIsCaptured(new WorkItemGroupedOnKey("a", "b", 23), captureA.get());
+    assertEquals(consumer.supportsStatefulProcessing() ? 3 : 0, captureB.get().timesProcessed());
+    assertNextWorkItemIsCaptured(new WorkItemGroupedOnKey("a", "b", 24), captureB.get());
+    assertEquals(consumer.supportsStatefulProcessing() ? 1 : 0, captureC.get().timesProcessed());
+    assertNextWorkItemIsCaptured(new WorkItemGroupedOnKey("c", "d", 12), captureC.get());
   }
 
   @Test
@@ -60,8 +70,12 @@ class ConsumerTest {
   }
 
   private void ifThereIsNoWorkNothingIsConsumed(Consumer consumer) {
-    AtomicReference<WorkItem> capturedWork = new AtomicReference<>();
-    withPostgresAndSchema(connection -> capturingConsume(connection, consumer, capturedWork));
+    AtomicReference<WorkItemContext> capturedWork = new AtomicReference<>();
+    withPostgresAndSchema(
+        connection -> {
+          Optional<Object> workResult = capturingConsume(connection, consumer, capturedWork);
+          assertFalse(workResult.isPresent());
+        });
     assertNull(capturedWork.get());
   }
 }

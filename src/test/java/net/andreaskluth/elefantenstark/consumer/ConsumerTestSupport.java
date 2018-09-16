@@ -4,22 +4,24 @@ import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.sql.Connection;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 import net.andreaskluth.elefantenstark.WorkItem;
+import net.andreaskluth.elefantenstark.consumer.Consumer.WorkItemContext;
 
 class ConsumerTestSupport {
 
-  static void assertNextWorkItemIsCaptured(WorkItem actual, WorkItem expected) {
-    assertAll("work", () -> assertEquals(expected, actual));
+  static void assertNextWorkItemIsCaptured(WorkItem expected, WorkItemContext actual) {
+    assertAll("work", () -> assertEquals(expected, actual.workItem()));
   }
 
-  static void capturingConsume(
-      Connection connection, Consumer consumer, AtomicReference<WorkItem> capture) {
-    consumer.next(
+  static Optional<Object> capturingConsume(
+      Connection connection, Consumer consumer, AtomicReference<WorkItemContext> capture) {
+    return consumer.next(
         connection,
-        workItem -> {
-          capture.set(workItem);
-          return null;
+        wic -> {
+          capture.set(wic);
+          return new Object();
         });
   }
 

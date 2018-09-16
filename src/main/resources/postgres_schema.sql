@@ -4,8 +4,8 @@ CREATE TABLE IF NOT EXISTS queue (
   times_processed int DEFAULT 0 NOT NULL,
   "key" text,
   value text,
+  "group" int,
   version bigint
 );
 
-CREATE INDEX IF NOT EXISTS queue_key_version_idx ON queue ("key", version);
-CREATE INDEX IF NOT EXISTS queue_key_where_available_idx ON queue ("key") WHERE available;
+CREATE INDEX IF NOT EXISTS queue_id_where_available_idx ON queue (id) WHERE available;

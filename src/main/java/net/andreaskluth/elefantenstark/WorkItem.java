@@ -6,16 +6,22 @@ public class WorkItem {
 
   private final String key;
   private final String value;
+  private final int group;
   private final long version;
 
-  public WorkItem(String key, String value, long version) {
+  public WorkItem(String key, String value, int group, long version) {
     this.key = Objects.requireNonNull(key);
     this.value = Objects.requireNonNull(value);
-    this.version = Objects.requireNonNull(version);
+    this.group = group;
+    this.version = version;
   }
 
   public String key() {
     return key;
+  }
+
+  public int group() {
+    return group;
   }
 
   public String value() {
@@ -31,7 +37,7 @@ public class WorkItem {
     if (this == o) {
       return true;
     }
-    if (o == null || getClass() != o.getClass()) {
+    if (!(o instanceof WorkItem)) {
       return false;
     }
     WorkItem workItem = (WorkItem) o;
