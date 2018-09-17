@@ -6,7 +6,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Optional;
-import net.andreaskluth.elefantenstark.WorkItem;
+import net.andreaskluth.elefantenstark.work.WorkItem;
 
 class SessionScopedConsumer extends Consumer {
 

@@ -3,13 +3,14 @@ package net.andreaskluth.elefantenstark.consumer;
 import static java.util.Objects.requireNonNull;
 import static net.andreaskluth.elefantenstark.consumer.ConsumerQueries.OBTAIN_WORK_QUERY_SESSION_SCOPED;
 import static net.andreaskluth.elefantenstark.consumer.ConsumerQueries.OBTAIN_WORK_QUERY_TRANSACTION_SCOPED;
+import static net.andreaskluth.elefantenstark.work.WorkItemDataMapDeserializer.deserialize;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Optional;
-import net.andreaskluth.elefantenstark.WorkItem;
+import net.andreaskluth.elefantenstark.work.WorkItem;
 
 public abstract class Consumer {
 
@@ -78,7 +79,8 @@ public abstract class Consumer {
             rawWorkEntry.getString("key"),
             rawWorkEntry.getString("value"),
             rawWorkEntry.getInt("group"),
-            rawWorkEntry.getLong("version")));
+            rawWorkEntry.getLong("version"),
+            deserialize(rawWorkEntry.getBytes("data_map"))));
   }
 
   protected String obtainWorkQuery() {
@@ -111,8 +113,9 @@ public abstract class Consumer {
   }
 
   public static class ConsumerException extends RuntimeException {
+    private static final long serialVersionUID = 6127755713170973126L;
 
-    protected ConsumerException(Throwable cause) {
+    public ConsumerException(Throwable cause) {
       super(cause);
     }
   }

@@ -47,6 +47,8 @@ public class QueueMetrics {
   }
 
   public static class QueueMetricsException extends RuntimeException {
+    private static final long serialVersionUID = 1683162842548587430L;
+
     public QueueMetricsException(SQLException cause) {
       super(cause);
     }

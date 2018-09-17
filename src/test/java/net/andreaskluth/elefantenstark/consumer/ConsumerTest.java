@@ -11,8 +11,8 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
-import net.andreaskluth.elefantenstark.WorkItemGroupedOnKey;
 import net.andreaskluth.elefantenstark.consumer.Consumer.WorkItemContext;
+import net.andreaskluth.elefantenstark.work.WorkItem;
 import org.junit.jupiter.api.Test;
 
 class ConsumerTest {
@@ -30,7 +30,7 @@ class ConsumerTest {
           scheduleThreeWorkItems(connection);
           capturingConsume(connection, consumer, capturedWork);
         });
-    assertNextWorkItemIsCaptured(new WorkItemGroupedOnKey("a", "b", 23), capturedWork.get());
+    assertNextWorkItemIsCaptured(WorkItem.groupedOnKey("a", "b", 23), capturedWork.get());
   }
 
   @Test
@@ -56,11 +56,11 @@ class ConsumerTest {
         });
 
     assertEquals(consumer.supportsStatefulProcessing() ? 2 : 0, captureA.get().timesProcessed());
-    assertNextWorkItemIsCaptured(new WorkItemGroupedOnKey("a", "b", 23), captureA.get());
+    assertNextWorkItemIsCaptured(WorkItem.groupedOnKey("a", "b", 23), captureA.get());
     assertEquals(consumer.supportsStatefulProcessing() ? 3 : 0, captureB.get().timesProcessed());
-    assertNextWorkItemIsCaptured(new WorkItemGroupedOnKey("a", "b", 24), captureB.get());
+    assertNextWorkItemIsCaptured(WorkItem.groupedOnKey("a", "b", 24), captureB.get());
     assertEquals(consumer.supportsStatefulProcessing() ? 1 : 0, captureC.get().timesProcessed());
-    assertNextWorkItemIsCaptured(new WorkItemGroupedOnKey("c", "d", 12), captureC.get());
+    assertNextWorkItemIsCaptured(WorkItem.groupedOnKey("c", "d", 12), captureC.get());
   }
 
   @Test

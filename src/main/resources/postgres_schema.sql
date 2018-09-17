@@ -5,6 +5,7 @@ CREATE TABLE IF NOT EXISTS queue (
   "key" text,
   value text,
   "group" int,
+  data_map bytea,
   version bigint
 );
 
