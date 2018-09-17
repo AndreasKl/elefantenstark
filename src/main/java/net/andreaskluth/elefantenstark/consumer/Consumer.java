@@ -97,7 +97,7 @@ public abstract class Consumer {
       this.workItem = requireNonNull(workItem);
     }
 
-    int id() {
+    public int id() {
       return id;
     }
 
@@ -105,7 +105,7 @@ public abstract class Consumer {
       return timesProcessed;
     }
 
-    WorkItem workItem() {
+    public WorkItem workItem() {
       return workItem;
     }
   }
