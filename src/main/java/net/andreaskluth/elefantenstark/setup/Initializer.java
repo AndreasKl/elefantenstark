@@ -8,7 +8,6 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Scanner;
-import java.util.function.Consumer;
 
 /** Creates the schema needed for ElefantenStark. */
 public class Initializer {
@@ -37,6 +36,8 @@ public class Initializer {
   }
 
   public class DatabaseInitializationException extends RuntimeException {
+    private static final long serialVersionUID = 4940823217792570933L;
+
     public DatabaseInitializationException(Throwable cause) {
       super(cause);
     }

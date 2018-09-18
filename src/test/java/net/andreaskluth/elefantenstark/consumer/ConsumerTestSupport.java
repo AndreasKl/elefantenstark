@@ -6,16 +6,16 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import java.sql.Connection;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
-import net.andreaskluth.elefantenstark.WorkItem;
+import net.andreaskluth.elefantenstark.work.WorkItem;
 import net.andreaskluth.elefantenstark.consumer.Consumer.WorkItemContext;
 
-class ConsumerTestSupport {
+public class ConsumerTestSupport {
 
   static void assertNextWorkItemIsCaptured(WorkItem expected, WorkItemContext actual) {
     assertAll("work", () -> assertEquals(expected, actual.workItem()));
   }
 
-  static Optional<Object> capturingConsume(
+  public static Optional<Object> capturingConsume(
       Connection connection, Consumer consumer, AtomicReference<WorkItemContext> capture) {
     return consumer.next(
         connection,
