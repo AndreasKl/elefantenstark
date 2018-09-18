@@ -1,7 +1,7 @@
 package net.andreaskluth.elefantenstark.work;
 
 import com.google.protobuf.InvalidProtocolBufferException;
-import net.andreaskluth.elefantenstark.work.DictionaryProtos.Dictionary;
+import net.andreaskluth.elefantenstark.work.generated.DictionaryProtos;
 
 public class WorkItemDataMapDeserializer {
 
@@ -10,9 +10,9 @@ public class WorkItemDataMapDeserializer {
       return WorkItemDataMap.empty();
     }
 
-    final Dictionary dictionary;
+    final DictionaryProtos.Dictionary dictionary;
     try {
-      dictionary = Dictionary.parseFrom(source);
+      dictionary = DictionaryProtos.Dictionary.parseFrom(source);
     } catch (InvalidProtocolBufferException ex) {
       throw new WorkItemDataMapDeserializerException(ex);
     }

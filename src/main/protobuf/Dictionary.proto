@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package work;
 
-option java_package = "net.andreaskluth.elefantenstark.work";
+option java_package = "net.andreaskluth.elefantenstark.work.generated";
 option java_outer_classname = "DictionaryProtos";
 
 message Dictionary {

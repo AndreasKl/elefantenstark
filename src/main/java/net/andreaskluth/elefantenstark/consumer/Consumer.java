@@ -10,6 +10,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Optional;
+import java.util.function.Function;
 import net.andreaskluth.elefantenstark.work.WorkItem;
 
 public abstract class Consumer {
@@ -25,6 +26,8 @@ public abstract class Consumer {
    * Creates a {@link Consumer} using a <code>pg_try_advisory_xact_lock</code> query locking on the
    * key to obtain work form the work queue. If the {@link WorkItem} is processed the entry is
    * updated as not 'available'.
+   *
+   * @return the postgres transaction scoped {@link Consumer}
    */
   public static Consumer transactionScoped() {
     return new TransactionScopedConsumer(OBTAIN_WORK_QUERY_TRANSACTION_SCOPED);
@@ -36,6 +39,8 @@ public abstract class Consumer {
    * as not 'available'. If the JVM crashes e.g. with a SEG_FAULT while the database connection is
    * still in use and the lock was not released. The lock will not be freed until the connection is
    * closed.
+   *
+   * @return the connection/session scoped {@link Consumer}
    */
   public static Consumer sessionScoped() {
     return new SessionScopedConsumer(OBTAIN_WORK_QUERY_SESSION_SCOPED);
@@ -48,9 +53,11 @@ public abstract class Consumer {
    * @param connection the connection the work is retrieved from.
    * @param worker the worker consuming the @{@link WorkItemContext} containing the {@link WorkItem}
    *     to work on.
+   * @param <T> the kind of object the {@link Function} would return.
+   * @return the {@link Optional} value that the worker passed to {@link Consumer#next(Connection,
+   *     Function)} returns, or {@link Optional#empty()} if there was nothing to process.
    */
-  public abstract <T> Optional<T> next(
-      Connection connection, java.util.function.Function<WorkItemContext, T> worker);
+  public abstract <T> Optional<T> next(Connection connection, Function<WorkItemContext, T> worker);
 
   /**
    * @return whether the {@link Consumer} implementation can update the database state while holding

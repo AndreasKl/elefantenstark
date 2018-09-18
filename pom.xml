@@ -9,7 +9,7 @@
   <version>0.1-SNAPSHOT</version>
   <packaging>jar</packaging>
 
-  <name>${project.groupId}:${project.artifactId}</name>
+  <name>Elefantenstark for JAVA</name>
   <description>A postgres advisory lock based worker queue.</description>
   <url>https://github.com/zweihaender/elefantenstark</url>
 
@@ -31,8 +31,7 @@
 
   <scm>
     <connection>scm:git:git://github.com/zweihaender/elefantenstark.git</connection>
-    <developerConnection>scm:git:ssh://github.com:zweihaender/elefantenstark.git
-    </developerConnection>
+    <developerConnection>scm:git:ssh://github.com:zweihaender/elefantenstark.git</developerConnection>
     <url>http://github.com/zweihaender/elefantenstark/tree/master</url>
   </scm>
 
@@ -44,6 +43,7 @@
     <protobuf-java.version>3.6.1</protobuf-java.version>
 
     <protoc-jar-maven-plugin.version>3.6.0.1</protoc-jar-maven-plugin.version>
+    <maven-shade-plugin.version>3.2.0</maven-shade-plugin.version>
     <maven-surefire-plugin.version>2.22.0</maven-surefire-plugin.version>
     <junit-platform-surefire-provider.version>1.2.0</junit-platform-surefire-provider.version>
     <junit-jupiter-engine.version>5.2.0</junit-jupiter-engine.version>
@@ -51,6 +51,8 @@
     <postgresql.version>42.2.4</postgresql.version>
     <otj-pg-embedded.version>0.12.0</otj-pg-embedded.version>
     <slf4j-simple.version>1.7.25</slf4j-simple.version>
+    <maven-javadoc-plugin.version>3.0.1</maven-javadoc-plugin.version>
+    <maven-source-plugin.version>3.0.1</maven-source-plugin.version>
   </properties>
 
   <dependencies>
@@ -110,6 +112,56 @@
           </execution>
         </executions>
       </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-shade-plugin</artifactId>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals>
+              <goal>shade</goal>
+            </goals>
+            <configuration>
+              <relocations>
+                <relocation>
+                  <pattern>com.google.protobuf</pattern>
+                  <shadedPattern>${project.groupId}.${project.artifactId}.shaded.protobuf
+                  </shadedPattern>
+                </relocation>
+              </relocations>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-source-plugin</artifactId>
+        <version>${maven-source-plugin.version}</version>
+        <executions>
+          <execution>
+            <id>attach-sources</id>
+            <goals>
+              <goal>jar-no-fork</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <version>${maven-javadoc-plugin.version}</version>
+        <executions>
+          <execution>
+            <id>attach-javadocs</id>
+            <goals>
+              <goal>jar</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <excludePackageNames>net.andreaskluth.elefantenstark.work.generated</excludePackageNames>
+        </configuration>
+      </plugin>
     </plugins>
     <pluginManagement>
       <plugins>
@@ -122,6 +174,11 @@
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-surefire-plugin</artifactId>
           <version>${maven-surefire-plugin.version}</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-shade-plugin</artifactId>
+          <version>${maven-shade-plugin.version}</version>
         </plugin>
       </plugins>
 
@@ -157,6 +214,5 @@
       </dependency>
     </dependencies>
   </dependencyManagement>
-
 
 </project>
