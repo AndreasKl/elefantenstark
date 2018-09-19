@@ -2,7 +2,7 @@ package net.andreaskluth.elefantenstark.consumer;
 
 class ConsumerQueries {
 
-  static String OBTAIN_WORK_QUERY_TRANSACTION_SCOPED =
+  static final String OBTAIN_WORK_QUERY_TRANSACTION_SCOPED =
       "UPDATE queue"
           + " SET"
           + "   available = FALSE"
@@ -24,7 +24,7 @@ class ConsumerQueries {
           + " AND available"
           + " RETURNING *;";
 
-  static String OBTAIN_WORK_QUERY_SESSION_SCOPED =
+  static final String OBTAIN_WORK_QUERY_SESSION_SCOPED =
       "UPDATE queue"
           + " SET"
           + "   times_processed = times_processed + 1"
