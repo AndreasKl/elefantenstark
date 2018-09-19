@@ -11,7 +11,7 @@
 
   <name>Elefantenstark for JAVA</name>
   <description>A postgres advisory lock based worker queue.</description>
-  <url>https://github.com/zweihaender/elefantenstark</url>
+  <url>https://github.com/AndreasKl/elefantenstark</url>
 
   <licenses>
     <license>
@@ -30,9 +30,9 @@
   </developers>
 
   <scm>
-    <connection>scm:git:git://github.com/zweihaender/elefantenstark.git</connection>
-    <developerConnection>scm:git:ssh://github.com:zweihaender/elefantenstark.git</developerConnection>
-    <url>http://github.com/zweihaender/elefantenstark/tree/master</url>
+    <connection>scm:git:git://github.com/AndreasKl/elefantenstark.git</connection>
+    <developerConnection>scm:git:ssh://github.com:AndreasKl/elefantenstark.git</developerConnection>
+    <url>http://github.com/AndreasKl/elefantenstark/tree/master</url>
   </scm>
 
   <properties>
