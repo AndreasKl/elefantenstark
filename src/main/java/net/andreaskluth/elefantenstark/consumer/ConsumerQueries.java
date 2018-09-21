@@ -1,8 +1,8 @@
 package net.andreaskluth.elefantenstark.consumer;
 
-class ConsumerQueries {
+public interface ConsumerQueries {
 
-  static final String OBTAIN_WORK_QUERY_TRANSACTION_SCOPED =
+  String OBTAIN_WORK_QUERY_TRANSACTION_SCOPED =
       "UPDATE queue"
           + " SET"
           + "   available = FALSE"
@@ -24,7 +24,7 @@ class ConsumerQueries {
           + " AND available"
           + " RETURNING *;";
 
-  static final String OBTAIN_WORK_QUERY_SESSION_SCOPED =
+  String OBTAIN_WORK_QUERY_SESSION_SCOPED =
       "UPDATE queue"
           + " SET"
           + "   times_processed = times_processed + 1"
@@ -45,8 +45,4 @@ class ConsumerQueries {
           + "    )"
           + " AND available"
           + " RETURNING *;";
-
-  private ConsumerQueries() {
-    throw new UnsupportedOperationException("Not permitted");
-  }
 }
