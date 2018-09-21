@@ -5,12 +5,14 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+/** Various metrics used for monitoring the state of the queue and taken locks. */
 public class QueueMetrics {
 
   public static final String COUNT = "SELECT COUNT(*) FROM queue";
   public static final String COUNT_AVAILABLE = "SELECT COUNT(*) FROM queue WHERE available";
   public static final String COUNT_NOT_AVAILABLE = "SELECT COUNT(*) FROM queue WHERE NOT available";
-  public static final String COUNT_QUEUE_ADVISORY_LOCK = "SELECT COUNT(*) FROM pg_locks WHERE locktype = 'advisory' AND classid = 'queue'::regclass::int;";
+  public static final String COUNT_QUEUE_ADVISORY_LOCK =
+      "SELECT COUNT(*) FROM pg_locks WHERE locktype = 'advisory' AND classid = 'queue'::regclass::int;";
 
   public QueueMetrics() {}
 
