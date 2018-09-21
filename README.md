@@ -1,6 +1,7 @@
 # elefantenstark
 
 [![Build Status](https://travis-ci.org/AndreasKl/elefantenstark.svg?branch=master)](https://travis-ci.org/AndreasKl/elefantenstark)
+[![codecov](https://codecov.io/gh/AndreasKl/elefantenstark/branch/master/graph/badge.svg)](https://codecov.io/gh/AndreasKl/elefantenstark)
 
 **Elefantenstark** is a **PostgreSQL** powered worker queue for Java 8. It uses
 Postgres **advisory locks** features to lock work while being worked on.
