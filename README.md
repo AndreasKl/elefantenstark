@@ -4,7 +4,7 @@
 [![codecov](https://codecov.io/gh/AndreasKl/elefantenstark/branch/master/graph/badge.svg)](https://codecov.io/gh/AndreasKl/elefantenstark)
 
 **Elefantenstark** is a **PostgreSQL** powered worker queue for Java 8. It uses
-Postgres **advisory locks** features to lock work while being worked on.
+Postgres **advisory locks** to lock work while being worked on.
 
 **The lock can be tweaked** to solve requirements
 regarding the ordering of how work has to be processed. E.g. all work items sharing 
