@@ -1,8 +1,8 @@
 CREATE TABLE IF NOT EXISTS queue (
   id bigserial PRIMARY KEY,
 
-  created timestamp DEFAULT NOW() NOT NULL,
-  updated timestamp DEFAULT NOW() NOT NULL,
+  created timestamp DEFAULT (NOW() at time zone 'utc') NOT NULL,
+  updated timestamp DEFAULT (NOW() at time zone 'utc') NOT NULL,
   processed boolean DEFAULT FALSE NOT NULL,
   times_processed int DEFAULT 0 NOT NULL,
 
