@@ -30,7 +30,7 @@ class ConsumerTest {
           scheduleThreeWorkItems(connection);
           capturingConsume(connection, consumer, capturedWork);
         });
-    assertNextWorkItemIsCaptured(WorkItem.groupedOnKey("a", "b", 23), capturedWork.get());
+    assertNextWorkItemIsCaptured(WorkItem.hashedOnKey("a", "b", 23), capturedWork.get());
   }
 
   @Test
@@ -56,11 +56,11 @@ class ConsumerTest {
         });
 
     assertEquals(consumer.supportsStatefulProcessing() ? 2 : 0, captureA.get().timesProcessed());
-    assertNextWorkItemIsCaptured(WorkItem.groupedOnKey("a", "b", 23), captureA.get());
+    assertNextWorkItemIsCaptured(WorkItem.hashedOnKey("a", "b", 23), captureA.get());
     assertEquals(consumer.supportsStatefulProcessing() ? 3 : 0, captureB.get().timesProcessed());
-    assertNextWorkItemIsCaptured(WorkItem.groupedOnKey("a", "b", 24), captureB.get());
+    assertNextWorkItemIsCaptured(WorkItem.hashedOnKey("a", "b", 24), captureB.get());
     assertEquals(consumer.supportsStatefulProcessing() ? 1 : 0, captureC.get().timesProcessed());
-    assertNextWorkItemIsCaptured(WorkItem.groupedOnKey("c", "d", 12), captureC.get());
+    assertNextWorkItemIsCaptured(WorkItem.hashedOnKey("c", "d", 12), captureC.get());
   }
 
   @Test

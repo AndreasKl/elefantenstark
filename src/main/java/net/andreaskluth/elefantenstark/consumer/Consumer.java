@@ -1,8 +1,8 @@
 package net.andreaskluth.elefantenstark.consumer;
 
 import static java.util.Objects.requireNonNull;
-import static net.andreaskluth.elefantenstark.consumer.ConsumerQueries.OBTAIN_WORK_QUERY_SESSION_SCOPED;
-import static net.andreaskluth.elefantenstark.consumer.ConsumerQueries.OBTAIN_WORK_QUERY_TRANSACTION_SCOPED;
+import static net.andreaskluth.elefantenstark.consumer.ConsumerQueries.SESSION_SCOPED_OBTAIN_WORK_QUERY;
+import static net.andreaskluth.elefantenstark.consumer.ConsumerQueries.TRANSACTION_SCOPED_OBTAIN_WORK_QUERY;
 import static net.andreaskluth.elefantenstark.work.WorkItemDataMapDeserializer.deserialize;
 
 import java.sql.Connection;
@@ -30,7 +30,7 @@ public abstract class Consumer {
    * @return the postgres transaction scoped {@link Consumer}
    */
   public static Consumer transactionScoped() {
-    return new TransactionScopedConsumer(OBTAIN_WORK_QUERY_TRANSACTION_SCOPED);
+    return new TransactionScopedConsumer(TRANSACTION_SCOPED_OBTAIN_WORK_QUERY);
   }
 
   /**
@@ -43,7 +43,7 @@ public abstract class Consumer {
    * @return the connection/session scoped {@link Consumer}
    */
   public static Consumer sessionScoped() {
-    return new SessionScopedConsumer(OBTAIN_WORK_QUERY_SESSION_SCOPED);
+    return new SessionScopedConsumer(SESSION_SCOPED_OBTAIN_WORK_QUERY);
   }
 
   /**
@@ -85,7 +85,7 @@ public abstract class Consumer {
         new WorkItem(
             rawWorkEntry.getString("key"),
             rawWorkEntry.getString("value"),
-            rawWorkEntry.getInt("group"),
+            rawWorkEntry.getInt("hash"),
             rawWorkEntry.getLong("version"),
             deserialize(rawWorkEntry.getBytes("data_map"))));
   }

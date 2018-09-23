@@ -10,7 +10,7 @@ public class WorkItem {
 
   private final String key;
   private final String value;
-  private final int group;
+  private final int hash;
   private final long version;
   private final WorkItemDataMap dataMap;
 
@@ -20,16 +20,16 @@ public class WorkItem {
    *
    * @param key the business key
    * @param value the payload value
-   * @param group the group this {@link WorkItem} belongs to, is used to for locking.
+   * @param hash the hash this {@link WorkItem} belongs to, is used to for locking.
    * @param version the version of this {@link WorkItem} e.g. currently used for informational
    *     purposes only.
    * @param dataMap a map of additional context data
    */
-  public WorkItem(String key, String value, int group, long version, WorkItemDataMap dataMap) {
+  public WorkItem(String key, String value, int hash, long version, WorkItemDataMap dataMap) {
     this.key = requireNonNull(key);
     this.value = requireNonNull(value);
 
-    this.group = group;
+    this.hash = hash;
     this.version = version;
 
     WorkItemDataMap source = requireNonNull(dataMap);
@@ -37,7 +37,7 @@ public class WorkItem {
   }
 
   /**
-   * Creates a {@link WorkItem} with a {@link WorkItem#group()} based on {@link WorkItem#key()}
+   * Creates a {@link WorkItem} with a {@link WorkItem#hash()} based on {@link WorkItem#key()}
    * calculated with a cheap {@link CRC32Hash}.
    *
    * @param key the business key
@@ -45,12 +45,12 @@ public class WorkItem {
    * @param version the version of this entity
    * @return the {@link WorkItem} grouped by its key.
    */
-  public static WorkItem groupedOnKey(String key, String value, long version) {
-    return groupedOnKey(key, value, version, WorkItemDataMap.empty());
+  public static WorkItem hashedOnKey(String key, String value, long version) {
+    return hashedOnKey(key, value, version, WorkItemDataMap.empty());
   }
 
   /**
-   * Creates a {@link WorkItem} with a {@link WorkItem#group()} based on {@link WorkItem#key()}
+   * Creates a {@link WorkItem} with a {@link WorkItem#hash()} based on {@link WorkItem#key()}
    * calculated with a cheap {@link CRC32Hash}.
    *
    * @param key the business key
@@ -60,7 +60,7 @@ public class WorkItem {
    *     net.andreaskluth.elefantenstark.consumer.Consumer}.
    * @return the {@link WorkItem} grouped by its key.
    */
-  public static WorkItem groupedOnKey(
+  public static WorkItem hashedOnKey(
       String key, String value, long version, WorkItemDataMap workItemDataMap) {
     return new WorkItem(key, value, CRC32Hash.hash(key), version, workItemDataMap);
   }
@@ -69,8 +69,8 @@ public class WorkItem {
     return key;
   }
 
-  public int group() {
-    return group;
+  public int hash() {
+    return hash;
   }
 
   public String value() {
@@ -97,7 +97,7 @@ public class WorkItem {
     return version == workItem.version
         && Objects.equals(key, workItem.key)
         && Objects.equals(value, workItem.value)
-        && Objects.equals(group, workItem.group);
+        && Objects.equals(hash, workItem.hash);
   }
 
   @Override
@@ -111,8 +111,8 @@ public class WorkItem {
         + key
         + "', value='"
         + value
-        + "', group="
-        + group
+        + "', hash="
+        + hash
         + ", version="
         + version
         + "}";

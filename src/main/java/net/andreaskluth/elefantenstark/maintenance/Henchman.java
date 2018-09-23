@@ -16,7 +16,7 @@ public class Henchman {
   }
 
   /**
-   * <b>handle with care</b> releases the lock taken for the group on the queue immediately. Can
+   * <b>handle with care</b> releases the lock taken for the hash on the queue immediately. Can
    * result in reordering and work being processed two times. If a consumer is currently running.
    *
    * @param connection the connection the locks are released from.

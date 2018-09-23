@@ -62,9 +62,9 @@ class MultiThreadedConsumerTest {
           capturingConsume(anotherConnection, consumer, capturedWorkC);
         });
 
-    assertNextWorkItemIsCaptured(WorkItem.groupedOnKey("a", "b", 23), capturedWorkA.get());
-    assertNextWorkItemIsCaptured(WorkItem.groupedOnKey("c", "d", 12), capturedWorkB.get());
-    assertNextWorkItemIsCaptured(WorkItem.groupedOnKey("a", "b", 24), capturedWorkC.get());
+    assertNextWorkItemIsCaptured(WorkItem.hashedOnKey("a", "b", 23), capturedWorkA.get());
+    assertNextWorkItemIsCaptured(WorkItem.hashedOnKey("c", "d", 12), capturedWorkB.get());
+    assertNextWorkItemIsCaptured(WorkItem.hashedOnKey("a", "b", 24), capturedWorkC.get());
   }
 
   private void joinThread(final Thread worker) {

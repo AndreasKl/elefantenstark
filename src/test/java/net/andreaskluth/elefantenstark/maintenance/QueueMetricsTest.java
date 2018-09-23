@@ -25,17 +25,17 @@ class QueueMetricsTest {
 
           scheduleThreeWorkItems(connection);
 
-          long scheduled = metrics.size(connection);
-          long available = metrics.sizeAvailable(connection);
-          long notAvailable = metrics.sizeNotAvailable(connection);
+          long size = metrics.size(connection);
+          long sizeNotProcessed = metrics.sizeNotProcessed(connection);
+          long sizeProcessed = metrics.sizeProcessed(connection);
 
           assertAll(
               "metrics",
               () -> {
                 assertEquals(0, initialSize);
-                assertEquals(3, scheduled);
-                assertEquals(3, available);
-                assertEquals(0, notAvailable);
+                assertEquals(3, size);
+                assertEquals(3, sizeNotProcessed);
+                assertEquals(0, sizeProcessed);
               });
         });
   }
