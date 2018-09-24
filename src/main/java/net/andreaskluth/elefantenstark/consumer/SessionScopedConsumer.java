@@ -1,19 +1,17 @@
 package net.andreaskluth.elefantenstark.consumer;
 
 import static java.util.Objects.requireNonNull;
+import static net.andreaskluth.elefantenstark.consumer.ConsumerQueries.SESSION_SCOPED_MARK_AS_PROCESSED;
+import static net.andreaskluth.elefantenstark.consumer.ConsumerQueries.SESSION_SCOPED_UNLOCK_ADVISORY_LOCK;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Optional;
 import net.andreaskluth.elefantenstark.work.WorkItem;
+import net.andreaskluth.elefantenstark.work.WorkItemContext;
 
 class SessionScopedConsumer extends Consumer {
-
-  private static final String MARK_AS_NOT_AVAILABLE =
-      "UPDATE queue SET available = false WHERE id = ?";
-  private static final String UNLOCK_ADVISORY_LOCK =
-      "SELECT pg_advisory_unlock('queue'::regclass::int, ?);";
 
   SessionScopedConsumer(String obtainWorkQuery) {
     super(obtainWorkQuery);
@@ -38,13 +36,9 @@ class SessionScopedConsumer extends Consumer {
             });
   }
 
-  @Override
-  public boolean supportsStatefulProcessing() {
-    return true;
-  }
-
   private void markAsProcessed(Connection connection, WorkItemContext workItemContext) {
-    try (PreparedStatement statement = connection.prepareStatement(MARK_AS_NOT_AVAILABLE)) {
+    try (PreparedStatement statement =
+        connection.prepareStatement(SESSION_SCOPED_MARK_AS_PROCESSED)) {
       statement.setInt(1, workItemContext.id());
       statement.execute();
     } catch (SQLException e) {
@@ -53,11 +47,17 @@ class SessionScopedConsumer extends Consumer {
   }
 
   private void unlock(Connection connection, WorkItem workItem) {
-    try (PreparedStatement preparedStatement = connection.prepareStatement(UNLOCK_ADVISORY_LOCK)) {
-      preparedStatement.setInt(1, workItem.group());
+    try (PreparedStatement preparedStatement =
+        connection.prepareStatement(SESSION_SCOPED_UNLOCK_ADVISORY_LOCK)) {
+      preparedStatement.setInt(1, workItem.hash());
       preparedStatement.execute();
     } catch (SQLException e) {
       throw new ConsumerException(e);
     }
+  }
+
+  @Override
+  public boolean supportsStatefulProcessing() {
+    return true;
   }
 }

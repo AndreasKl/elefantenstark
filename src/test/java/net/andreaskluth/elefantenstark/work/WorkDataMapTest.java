@@ -6,7 +6,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.concurrent.atomic.AtomicReference;
 import net.andreaskluth.elefantenstark.consumer.Consumer;
-import net.andreaskluth.elefantenstark.consumer.Consumer.WorkItemContext;
 import net.andreaskluth.elefantenstark.consumer.ConsumerTestSupport;
 import net.andreaskluth.elefantenstark.producer.Producer;
 import org.junit.jupiter.api.Test;
@@ -16,7 +15,7 @@ class WorkDataMapTest {
   private static final WorkItemDataMap WORK_ITEM_DATA_MAP =
       new WorkItemDataMap(singletonMap("make me feel", "invincible"));
   private static final WorkItem WORK_ITEM =
-      WorkItem.groupedOnKey("_key_", "_value_", 0, WORK_ITEM_DATA_MAP);
+      WorkItem.hashedOnKey("_key_", "_value_", 0, WORK_ITEM_DATA_MAP);
 
   private static final Producer PRODUCER = new Producer();
   private static final Consumer CONSUMER = Consumer.transactionScoped();

@@ -8,8 +8,8 @@ import static net.andreaskluth.elefantenstark.consumer.ConsumerTestSupport.captu
 import java.sql.Connection;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
-import net.andreaskluth.elefantenstark.consumer.Consumer.WorkItemContext;
 import net.andreaskluth.elefantenstark.work.WorkItem;
+import net.andreaskluth.elefantenstark.work.WorkItemContext;
 import org.junit.jupiter.api.Test;
 
 class MultiThreadedConsumerTest {
@@ -62,9 +62,9 @@ class MultiThreadedConsumerTest {
           capturingConsume(anotherConnection, consumer, capturedWorkC);
         });
 
-    assertNextWorkItemIsCaptured(WorkItem.groupedOnKey("a", "b", 23), capturedWorkA.get());
-    assertNextWorkItemIsCaptured(WorkItem.groupedOnKey("c", "d", 12), capturedWorkB.get());
-    assertNextWorkItemIsCaptured(WorkItem.groupedOnKey("a", "b", 24), capturedWorkC.get());
+    assertNextWorkItemIsCaptured(WorkItem.hashedOnKey("a", "b", 23), capturedWorkA.get());
+    assertNextWorkItemIsCaptured(WorkItem.hashedOnKey("c", "d", 12), capturedWorkB.get());
+    assertNextWorkItemIsCaptured(WorkItem.hashedOnKey("a", "b", 24), capturedWorkC.get());
   }
 
   private void joinThread(final Thread worker) {

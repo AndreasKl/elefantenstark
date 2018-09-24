@@ -1,8 +1,8 @@
 package net.andreaskluth.elefantenstark.consumer;
 
 import static java.util.Objects.requireNonNull;
-import static net.andreaskluth.elefantenstark.consumer.ConsumerQueries.OBTAIN_WORK_QUERY_SESSION_SCOPED;
-import static net.andreaskluth.elefantenstark.consumer.ConsumerQueries.OBTAIN_WORK_QUERY_TRANSACTION_SCOPED;
+import static net.andreaskluth.elefantenstark.consumer.ConsumerQueries.SESSION_SCOPED_OBTAIN_WORK_QUERY;
+import static net.andreaskluth.elefantenstark.consumer.ConsumerQueries.TRANSACTION_SCOPED_OBTAIN_WORK_QUERY;
 import static net.andreaskluth.elefantenstark.work.WorkItemDataMapDeserializer.deserialize;
 
 import java.sql.Connection;
@@ -12,6 +12,7 @@ import java.sql.Statement;
 import java.util.Optional;
 import java.util.function.Function;
 import net.andreaskluth.elefantenstark.work.WorkItem;
+import net.andreaskluth.elefantenstark.work.WorkItemContext;
 
 public abstract class Consumer {
 
@@ -30,7 +31,7 @@ public abstract class Consumer {
    * @return the postgres transaction scoped {@link Consumer}
    */
   public static Consumer transactionScoped() {
-    return new TransactionScopedConsumer(OBTAIN_WORK_QUERY_TRANSACTION_SCOPED);
+    return new TransactionScopedConsumer(TRANSACTION_SCOPED_OBTAIN_WORK_QUERY);
   }
 
   /**
@@ -43,7 +44,7 @@ public abstract class Consumer {
    * @return the connection/session scoped {@link Consumer}
    */
   public static Consumer sessionScoped() {
-    return new SessionScopedConsumer(OBTAIN_WORK_QUERY_SESSION_SCOPED);
+    return new SessionScopedConsumer(SESSION_SCOPED_OBTAIN_WORK_QUERY);
   }
 
   /**
@@ -85,7 +86,7 @@ public abstract class Consumer {
         new WorkItem(
             rawWorkEntry.getString("key"),
             rawWorkEntry.getString("value"),
-            rawWorkEntry.getInt("group"),
+            rawWorkEntry.getInt("hash"),
             rawWorkEntry.getLong("version"),
             deserialize(rawWorkEntry.getBytes("data_map"))));
   }
@@ -94,36 +95,4 @@ public abstract class Consumer {
     return obtainWorkQuery;
   }
 
-  public static class WorkItemContext {
-
-    private final int id;
-    private final int timesProcessed;
-    private final WorkItem workItem;
-
-    protected WorkItemContext(int id, int timesProcessed, WorkItem workItem) {
-      this.id = id;
-      this.timesProcessed = timesProcessed;
-      this.workItem = requireNonNull(workItem);
-    }
-
-    public int id() {
-      return id;
-    }
-
-    public int timesProcessed() {
-      return timesProcessed;
-    }
-
-    public WorkItem workItem() {
-      return workItem;
-    }
-  }
-
-  public static class ConsumerException extends RuntimeException {
-    private static final long serialVersionUID = 6127755713170973126L;
-
-    public ConsumerException(Throwable cause) {
-      super(cause);
-    }
-  }
 }

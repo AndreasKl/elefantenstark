@@ -1,12 +1,17 @@
 CREATE TABLE IF NOT EXISTS queue (
   id bigserial PRIMARY KEY,
-  available boolean DEFAULT TRUE NOT NULL,
+
+  created timestamp DEFAULT (NOW() at time zone 'utc') NOT NULL,
+  updated timestamp DEFAULT (NOW() at time zone 'utc') NOT NULL,
+  processed boolean DEFAULT FALSE NOT NULL,
   times_processed int DEFAULT 0 NOT NULL,
+
   "key" text,
   value text,
-  "group" int,
+  version bigint,
   data_map bytea,
-  version bigint
+
+  hash int
 );
 
-CREATE INDEX IF NOT EXISTS queue_id_where_available_idx ON queue (id) WHERE available;
+CREATE INDEX IF NOT EXISTS queue_id_where_not_processed_idx ON queue (id) WHERE NOT processed;

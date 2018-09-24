@@ -34,12 +34,18 @@ public class WorkItemDataMap {
     this.map = new HashMap<>(source.map);
   }
 
+  /**
+   * @return an empty immutable {@link WorkItemDataMap}
+   */
   public static WorkItemDataMap empty() {
     return EMPTY;
   }
 
+  /**
+   * @return the inner map
+   */
   public Map<String, String> map() {
-    return map;
+    return new HashMap<>(map);
   }
 
   @Override

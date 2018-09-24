@@ -18,7 +18,7 @@ public class Initializer {
     try (Statement statement = connection.createStatement()) {
       statement.execute(loadSchemaScript());
     } catch (SQLException e) {
-      throw new DatabaseInitializationException(e);
+      throw new InitializerException(e);
     }
   }
 
@@ -27,7 +27,7 @@ public class Initializer {
       Scanner scanner = new Scanner(stream, UTF_8.name()).useDelimiter("\\A");
       return scanner.hasNext() ? scanner.next() : "";
     } catch (IOException e) {
-      throw new DatabaseInitializationException(e);
+      throw new InitializerException(e);
     }
   }
 
@@ -35,11 +35,4 @@ public class Initializer {
     return Initializer.class.getClassLoader().getResourceAsStream(POSTGRES_SCHEMA_SQL);
   }
 
-  public class DatabaseInitializationException extends RuntimeException {
-    private static final long serialVersionUID = 4940823217792570933L;
-
-    public DatabaseInitializationException(Throwable cause) {
-      super(cause);
-    }
-  }
 }

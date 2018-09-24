@@ -17,7 +17,7 @@ class ProducerTest {
   void addsWorkItemsToQueue() {
     withPostgresAndSchema(
         connection -> {
-          WorkItem workItem = WorkItem.groupedOnKey("_test_key_", "_test_value_", 0);
+          WorkItem workItem = WorkItem.hashedOnKey("_test_key_", "_test_value_", 0);
           new Producer().produce(connection, workItem);
 
           WorkItem queuedWorkItem = queryForWorkItem(connection);
@@ -28,12 +28,12 @@ class ProducerTest {
 
   private WorkItem queryForWorkItem(Connection connection) {
     try (Statement statement = connection.createStatement();
-        ResultSet rs = statement.executeQuery("SELECT key, value, \"group\", version, data_map FROM queue")) {
+        ResultSet rs = statement.executeQuery("SELECT key, value, hash, version, data_map FROM queue")) {
       if (rs.next()) {
         return new WorkItem(
             rs.getString("key"),
             rs.getString("value"),
-            rs.getInt("group"),
+            rs.getInt("hash"),
             rs.getLong("version"),
             deserialize(rs.getBytes("data_map")));
       }
