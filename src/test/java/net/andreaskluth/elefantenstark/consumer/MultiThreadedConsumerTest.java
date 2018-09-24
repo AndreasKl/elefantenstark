@@ -8,8 +8,8 @@ import static net.andreaskluth.elefantenstark.consumer.ConsumerTestSupport.captu
 import java.sql.Connection;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
-import net.andreaskluth.elefantenstark.consumer.Consumer.WorkItemContext;
 import net.andreaskluth.elefantenstark.work.WorkItem;
+import net.andreaskluth.elefantenstark.work.WorkItemContext;
 import org.junit.jupiter.api.Test;
 
 class MultiThreadedConsumerTest {

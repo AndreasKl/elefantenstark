@@ -7,7 +7,7 @@ import java.sql.Connection;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 import net.andreaskluth.elefantenstark.work.WorkItem;
-import net.andreaskluth.elefantenstark.consumer.Consumer.WorkItemContext;
+import net.andreaskluth.elefantenstark.work.WorkItemContext;
 
 public class ConsumerTestSupport {
 

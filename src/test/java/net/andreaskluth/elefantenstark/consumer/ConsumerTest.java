@@ -11,8 +11,8 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
-import net.andreaskluth.elefantenstark.consumer.Consumer.WorkItemContext;
 import net.andreaskluth.elefantenstark.work.WorkItem;
+import net.andreaskluth.elefantenstark.work.WorkItemContext;
 import org.junit.jupiter.api.Test;
 
 class ConsumerTest {

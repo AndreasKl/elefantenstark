@@ -3,10 +3,13 @@ package net.andreaskluth.elefantenstark;
 import com.opentable.db.postgres.embedded.EmbeddedPostgres;
 import java.io.IOException;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
+import javax.sql.DataSource;
 import net.andreaskluth.elefantenstark.setup.Initializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,8 +18,26 @@ public class PostgresSupport {
 
   private static final Logger log = LoggerFactory.getLogger(PostgresSupport.class);
 
+  private static final AtomicReference<EmbeddedPostgres> embeddedPostgres = new AtomicReference<>();
+
   private PostgresSupport() {
     throw new RuntimeException("Not permitted");
+  }
+
+  private static EmbeddedPostgres initializedPostgresWithSchema() {
+    synchronized (embeddedPostgres) {
+      if (PostgresSupport.embeddedPostgres.get() == null) {
+        EmbeddedPostgres embeddedPostgres = start();
+        prepareNewPostgres(embeddedPostgres.getPostgresDatabase());
+        if (!PostgresSupport.embeddedPostgres.compareAndSet(null, embeddedPostgres)) {
+          return PostgresSupport.embeddedPostgres.get();
+        }
+      }
+
+      EmbeddedPostgres embeddedPostgres = PostgresSupport.embeddedPostgres.get();
+      cleanupExistingPostgres(embeddedPostgres.getPostgresDatabase());
+      return embeddedPostgres;
+    }
   }
 
   private static EmbeddedPostgres start() {
@@ -25,6 +46,23 @@ public class PostgresSupport {
     } catch (IOException ex) {
       log.error("Not able to start postgres.", ex);
       throw new RuntimeException(ex);
+    }
+  }
+
+  private static void prepareNewPostgres(DataSource postgresDatabase) {
+    try (Connection connection = postgresDatabase.getConnection()) {
+      new Initializer().build(connection);
+    } catch (SQLException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  private static void cleanupExistingPostgres(DataSource postgresDatabase) {
+    try (Connection connection = postgresDatabase.getConnection();
+        PreparedStatement truncate = connection.prepareStatement("TRUNCATE TABLE queue;")) {
+      truncate.execute();
+    } catch (SQLException e) {
+      throw new RuntimeException(e);
     }
   }
 
@@ -41,13 +79,12 @@ public class PostgresSupport {
   }
 
   public static void withPostgresConnectionsAndSchema(
-      Consumer<PostgresConnectionProvider> postgresConnectionConsumer) {
+      Consumer<PostgresConnectionProvider> connectionsConsumer) {
 
-    withPostgresConnections(
-        provider -> {
-          new Initializer().build(provider.get());
-          postgresConnectionConsumer.accept(provider);
-        });
+    try (PostgresConnectionProvider provider =
+        new PostgresConnectionProvider(initializedPostgresWithSchema())) {
+      connectionsConsumer.accept(provider);
+    }
   }
 
   public static void withPostgresAndSchema(Consumer<Connection> postgresConnectionConsumer) {
@@ -69,6 +106,9 @@ public class PostgresSupport {
     public void close() {
       for (Connection connection : connections) {
         try {
+          if (connection.isClosed()) {
+            continue;
+          }
           connection.close();
         } catch (Exception ex) {
           log.warn("Not able to close database connection. {} ", connection, ex);

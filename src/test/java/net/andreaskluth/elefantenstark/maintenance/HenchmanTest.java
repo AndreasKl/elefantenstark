@@ -3,14 +3,17 @@ package net.andreaskluth.elefantenstark.maintenance;
 import static net.andreaskluth.elefantenstark.PostgresSupport.withPostgresConnectionsAndSchema;
 import static net.andreaskluth.elefantenstark.TestData.scheduleThreeWorkItems;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.sql.Connection;
 import java.time.Duration;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
+import net.andreaskluth.elefantenstark.JdbcSupport;
 import net.andreaskluth.elefantenstark.consumer.Consumer;
 import net.andreaskluth.elefantenstark.consumer.ConsumerTestSupport;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.function.Executable;
 
 class HenchmanTest {
 
@@ -70,6 +73,25 @@ class HenchmanTest {
 
           assertEquals(Optional.of(0L), next);
         });
+  }
+
+  /**
+   * TODO: Think if this kind of test improves the overall quality.
+   */
+  @Test
+  void unlockRaisesOnClosedConnection() {
+    Executable scope =
+        () ->
+            withPostgresConnectionsAndSchema(
+                connections -> {
+                  Connection connection = connections.get();
+
+                  JdbcSupport.close(connection);
+
+                  henchman.unlockAllAdvisoryLocks(connection);
+                });
+
+    assertThrows(HenchmanException.class, scope);
   }
 
   private void consumeThreeWorkItems(Connection connection) {

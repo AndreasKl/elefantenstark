@@ -12,6 +12,7 @@ import java.sql.Statement;
 import java.util.Optional;
 import java.util.function.Function;
 import net.andreaskluth.elefantenstark.work.WorkItem;
+import net.andreaskluth.elefantenstark.work.WorkItemContext;
 
 public abstract class Consumer {
 
@@ -94,36 +95,4 @@ public abstract class Consumer {
     return obtainWorkQuery;
   }
 
-  public static class WorkItemContext {
-
-    private final int id;
-    private final int timesProcessed;
-    private final WorkItem workItem;
-
-    protected WorkItemContext(int id, int timesProcessed, WorkItem workItem) {
-      this.id = id;
-      this.timesProcessed = timesProcessed;
-      this.workItem = requireNonNull(workItem);
-    }
-
-    public int id() {
-      return id;
-    }
-
-    public int timesProcessed() {
-      return timesProcessed;
-    }
-
-    public WorkItem workItem() {
-      return workItem;
-    }
-  }
-
-  public static class ConsumerException extends RuntimeException {
-    private static final long serialVersionUID = 6127755713170973126L;
-
-    public ConsumerException(Throwable cause) {
-      super(cause);
-    }
-  }
 }

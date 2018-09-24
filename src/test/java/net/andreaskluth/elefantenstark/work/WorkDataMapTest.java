@@ -6,7 +6,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.concurrent.atomic.AtomicReference;
 import net.andreaskluth.elefantenstark.consumer.Consumer;
-import net.andreaskluth.elefantenstark.consumer.Consumer.WorkItemContext;
 import net.andreaskluth.elefantenstark.consumer.ConsumerTestSupport;
 import net.andreaskluth.elefantenstark.producer.Producer;
 import org.junit.jupiter.api.Test;

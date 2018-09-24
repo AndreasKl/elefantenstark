@@ -5,6 +5,7 @@ import static java.util.Objects.requireNonNull;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Optional;
+import net.andreaskluth.elefantenstark.work.WorkItemContext;
 
 class TransactionScopedConsumer extends Consumer {
 

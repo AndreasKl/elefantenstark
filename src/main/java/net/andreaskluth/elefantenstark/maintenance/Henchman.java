@@ -11,7 +11,6 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.Calendar;
-import java.util.Objects;
 import java.util.TimeZone;
 
 /** Provides means to cleanup work that was worked on and release leftover locks. */
@@ -74,15 +73,6 @@ public class Henchman {
       unlockStatement.execute();
     } catch (SQLException e) {
       throw new HenchmanException(e);
-    }
-  }
-
-  public class HenchmanException extends RuntimeException {
-
-    private static final long serialVersionUID = -6367062171824949422L;
-
-    public HenchmanException(Throwable cause) {
-      super(cause);
     }
   }
 }
