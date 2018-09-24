@@ -1,5 +1,7 @@
 package net.andreaskluth.elefantenstark.work;
 
+import static java.util.Objects.requireNonNull;
+
 import com.google.protobuf.InvalidProtocolBufferException;
 import net.andreaskluth.elefantenstark.work.generated.DictionaryProtos;
 
@@ -14,6 +16,8 @@ public class WorkItemDataMapDeserializer {
    *     #deserialize(byte[])} can not be deserialized.
    */
   public static WorkItemDataMap deserialize(byte[] source) {
+    requireNonNull(source);
+
     if (source.length == 0) {
       return WorkItemDataMap.empty();
     }

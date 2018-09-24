@@ -1,6 +1,7 @@
 package net.andreaskluth.elefantenstark.setup;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.Objects.requireNonNull;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -15,6 +16,7 @@ public class Initializer {
   private static final String POSTGRES_SCHEMA_SQL = "postgres_schema.sql";
 
   public void build(Connection connection) {
+    requireNonNull(connection);
     try (Statement statement = connection.createStatement()) {
       statement.execute(loadSchemaScript());
     } catch (SQLException e) {

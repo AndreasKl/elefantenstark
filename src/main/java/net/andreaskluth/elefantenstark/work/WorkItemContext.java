@@ -2,9 +2,7 @@ package net.andreaskluth.elefantenstark.work;
 
 import static java.util.Objects.requireNonNull;
 
-/**
- * A simple context object containing information related to a {@link WorkItem}.
- */
+/** A simple context object containing information related to a {@link WorkItem}. */
 public class WorkItemContext {
 
   private final int id;

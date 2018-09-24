@@ -3,10 +3,14 @@ package net.andreaskluth.elefantenstark.work;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.function.Executable;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 
 class WorkItemDataMapDeserializerTest {
 
@@ -16,16 +20,21 @@ class WorkItemDataMapDeserializerTest {
     assertThrows(WorkItemDataMapDeserializerException.class, scope);
   }
 
-  @Test
-  void serializesAndDeserializesAFilledMap() {
-    byte[] value = WorkItemDataMapSerializer.serialize(new WorkItemDataMap(aMap()));
+  @ParameterizedTest
+  @MethodSource("maps")
+  void serializesAndDeserializesMap(Map<String, String> mapToSerialize) {
+    byte[] value = WorkItemDataMapSerializer.serialize(new WorkItemDataMap(mapToSerialize));
 
     WorkItemDataMap deserialize = WorkItemDataMapDeserializer.deserialize(value);
 
-    assertEquals(deserialize.map(), aMap());
+    assertEquals(deserialize, new WorkItemDataMap(mapToSerialize));
   }
 
-  private Map<String, String> aMap() {
+  private static Stream<Map<String, String>> maps() {
+    return Stream.of(aMap(), Collections.emptyMap());
+  }
+
+  private static Map<String, String> aMap() {
     Map<String, String> values = new HashMap<>();
     values.put("demo", "stuff");
     values.put("more", "stuff");

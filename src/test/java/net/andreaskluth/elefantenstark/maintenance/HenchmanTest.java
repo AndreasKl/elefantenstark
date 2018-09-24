@@ -17,7 +17,7 @@ import org.junit.jupiter.api.function.Executable;
 
 class HenchmanTest {
 
-  final Henchman henchman = new Henchman();
+  final Henchman henchman = Henchman.henchman();
 
   final Consumer consumer = Consumer.sessionScoped();
   final QueueMetrics queueMetrics = new QueueMetrics();

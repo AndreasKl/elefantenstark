@@ -20,6 +20,12 @@ public class Henchman {
     return Calendar.getInstance(TimeZone.getTimeZone(ZoneOffset.UTC));
   }
 
+  protected Henchman() {}
+
+  public static Henchman henchman() {
+    return new Henchman();
+  }
+
   /**
    * Removes old work items from the queue.
    *

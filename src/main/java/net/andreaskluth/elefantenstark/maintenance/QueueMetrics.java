@@ -1,5 +1,11 @@
 package net.andreaskluth.elefantenstark.maintenance;
 
+import static java.util.Objects.requireNonNull;
+import static net.andreaskluth.elefantenstark.maintenance.QueueMetricsQueries.COUNT;
+import static net.andreaskluth.elefantenstark.maintenance.QueueMetricsQueries.COUNT_NOT_PROCESSED;
+import static net.andreaskluth.elefantenstark.maintenance.QueueMetricsQueries.COUNT_PROCESSED;
+import static net.andreaskluth.elefantenstark.maintenance.QueueMetricsQueries.COUNT_QUEUE_ADVISORY_LOCK;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -8,13 +14,7 @@ import java.sql.SQLException;
 /** Various metrics used for monitoring the state of the queue and taken locks. */
 public class QueueMetrics {
 
-  public static final String COUNT = "SELECT COUNT(*) FROM queue";
-  public static final String COUNT_NOT_PROCESSED = "SELECT COUNT(*) FROM queue WHERE NOT processed";
-  public static final String COUNT_PROCESSED = "SELECT COUNT(*) FROM queue WHERE processed ";
-  public static final String COUNT_QUEUE_ADVISORY_LOCK =
-      "SELECT COUNT(*) FROM pg_locks WHERE locktype = 'advisory' AND classid = 'queue'::regclass::int;";
-
-  public QueueMetrics() {}
+  protected QueueMetrics() {}
 
   public static QueueMetrics metrics() {
     return new QueueMetrics();
@@ -37,6 +37,8 @@ public class QueueMetrics {
   }
 
   protected long sizeFor(Connection connection, String query) {
+    requireNonNull(connection);
+
     try (PreparedStatement preparedStatement = connection.prepareStatement(query);
         ResultSet resultSet = preparedStatement.executeQuery()) {
       if (resultSet.next()) {
