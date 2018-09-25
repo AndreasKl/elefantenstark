@@ -65,27 +65,14 @@ withPostgresAndSchema(
 
 #### Builds
 
-Snapshot builds are available on [Sonatype Snapshots](https://oss.sonatype.org/content/repositories/snapshots/net/andreaskluth/elefantenstark/).
+Snapshot builds are available on [Sonatype Snapshots](https://oss.sonatype.org/content/repositories/snapshots/net/andreaskluth/elefantenstark/), release builds are available on maven central.
 
 ```xml
 <dependencies>
   <dependency>
     <groupId>net.andreaskluth</groupId>
     <artifactId>elefantenstark</artifactId>
-    <version>0.1-SNAPSHOT</version>
+    <version>0.1-RELEASE</version>
   </dependency>
 </dependencies>
-
-<repositories>
-  <repository>
-    <id>snapshots-repo</id>
-    <url>https://oss.sonatype.org/content/repositories/snapshots</url>
-    <releases>
-      <enabled>false</enabled>
-    </releases>
-    <snapshots>
-      <enabled>true</enabled>
-    </snapshots>
-  </repository>
-</repositories>
 ```
