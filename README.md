@@ -1,6 +1,7 @@
 # elefantenstark
 
 [![Build Status](https://travis-ci.org/AndreasKl/elefantenstark.svg?branch=master)](https://travis-ci.org/AndreasKl/elefantenstark)
+[![Maven Central](https://img.shields.io/maven-central/v/net.andreaskluth/elefantenstark.svg?label=Maven%20Central)](https://search.maven.org/search?q=g:%22net.andreaskluth%22%20AND%20a:%22elefantenstark%22)
 [![codecov](https://codecov.io/gh/AndreasKl/elefantenstark/branch/master/graph/badge.svg)](https://codecov.io/gh/AndreasKl/elefantenstark)
 
 **Elefantenstark** is a **PostgreSQL** powered worker queue for Java 8. It uses
